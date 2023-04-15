@@ -9,6 +9,8 @@ using KitchenLib.Preferences;
 using KitchenLib.References;
 using KitchenLib.Utils;
 using KitchenMods;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Unity.Collections;
@@ -16,8 +18,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
-// Namespace should have "Kitchen" in the beginning
-namespace KitchenMyMod
+namespace KitchenSledgehammer
 {
     public class Mod : BaseMod, IModSystem
     {
@@ -52,49 +53,13 @@ namespace KitchenMyMod
         private void AddGameData()
         {
             LogInfo("Attempting to register game data...");
-            // AddGameDataObject<MyCustomGDO>();
+
+            //AddGameDataObject<Sledgehammer>();
+            //AddGameDataObject<SledgehammerProvider>();
+
             LogInfo("Done loading game data.");
         }
 
-
-        [UpdateBefore(typeof(ItemTransferGroup))]
-        public class SwitchDualProvider : ItemInteractionSystem, IModSystem
-        {
-            protected override bool IsPossible(ref InteractionData data)
-            {
-                return true;
-            }
-
-            protected override void Perform(ref InteractionData data)
-            {
-                if (!EntityManager.RequireComponent<CPosition>(data.Interactor, out CPosition playerPosition))
-                    return;
-
-                GameObject floorplan = GameObject.Find("Kitchen Floorplan(Clone)");
-                Transform closestWall = null;
-                float closestDistance = float.MaxValue;
-                foreach (Transform child in floorplan.transform)
-                {
-                    if (child.name != "Short Wall Section(Clone)" || !child.gameObject.activeSelf)
-                        continue;
-                    
-                    float distance = Vector3.Distance(child.position, playerPosition.Position);
-                    if (distance < closestDistance)
-                    {
-                        closestDistance = distance;
-                        closestWall = child;
-                    }
-                }
-
-                if (closestWall != null && closestDistance <= 1)
-                {
-                    closestWall.gameObject.SetActive(false);
-                    GameObject.Instantiate((GDOUtils.GetExistingGDO(ApplianceReferences.WorkshopFence) as Appliance).Prefab, closestWall.position, closestWall.rotation, floorplan.transform);
-                    //TODO: cant find the hatch, need to manually reference model & material?
-                    //TODO: also this just stays forever... need to create it via entity system?
-                }
-            }
-        }
 
         protected override void OnPostActivate(KitchenMods.Mod mod)
         {
@@ -113,6 +78,7 @@ namespace KitchenMyMod
             {
             };
         }
+
         #region Logging
         public static void LogInfo(string _log) { Debug.Log($"[{MOD_NAME}] " + _log); }
         public static void LogWarning(string _log) { Debug.LogWarning($"[{MOD_NAME}] " + _log); }
@@ -121,5 +87,29 @@ namespace KitchenMyMod
         public static void LogWarning(object _log) { LogWarning(_log.ToString()); }
         public static void LogError(object _log) { LogError(_log.ToString()); }
         #endregion
+    }
+
+
+
+    [UpdateBefore(typeof(ItemTransferGroup))]
+    public class SwitchDualProvider : ItemInteractionSystem, IModSystem
+    {
+        protected override bool IsPossible(ref InteractionData data)
+        {
+            return true;
+        }
+
+        protected override void Perform(ref InteractionData data)
+        {
+            if (GameInfo.CurrentScene != SceneType.Kitchen)
+                return;
+
+            if (!EntityManager.RequireComponent<CPosition>(data.Interactor, out CPosition playerPosition))
+                return;
+
+            Transform closestWall = Helpers.TryToRepalceWallWithHatch(playerPosition.Position);
+            if(closestWall != null)
+                SRestoreHammeredWalls.Instance?.Hammered(closestWall.transform.position);
+        }
     }
 }
