@@ -29,10 +29,8 @@ namespace KitchenSledgehammer
             }
             if (closestWall != null && closestDistance < 1 && closestWall.gameObject.activeSelf)
             {
-                Debug.Log(closestDistance);
                 closestWall.gameObject.SetActive(false);
-                GameObject.Instantiate((GDOUtils.GetExistingGDO(ApplianceReferences.WorkshopFence) as Appliance).Prefab, closestWall.position, closestWall.rotation, floorplan);
-                //TODO: cant find the hatch, need to manually reference model & material?
+                GameObject.Instantiate(Refs.HatchHammered.Prefab, closestWall.position, closestWall.rotation, floorplan);
                 return closestWall;
             }
             return null;

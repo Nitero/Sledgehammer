@@ -96,5 +96,20 @@ namespace KitchenSledgehammer
         {
             EntityManager.AddComponentData(EntityManager.CreateEntity(), new CHasBeenHammered(wallPosition));
         }
+
+        public bool IsHammeredWallBetween(Vector3 from, Vector3 to)
+        {
+            NativeArray<Entity> _hammeredWalls = HammeredWallsQuery.ToEntityArray(Allocator.TempJob);
+            foreach (var wall in _hammeredWalls)
+            {
+                if (!EntityManager.RequireComponent<CHasBeenHammered>(wall, out CHasBeenHammered hasBeenHammered))
+                    continue;
+
+                if (Vector3.Distance(hasBeenHammered.WallPosition, from) <= 2)//TODO: actual logic here
+                    return true;
+            }
+
+            return false;
+        }
     }
 }
