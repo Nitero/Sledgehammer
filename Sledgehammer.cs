@@ -1,10 +1,12 @@
-﻿using KitchenData;
+﻿using Kitchen;
+using KitchenData;
 using KitchenLib.Customs;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace KitchenSledgehammer
 {
-    /*public class Sledgehammer : CustomItem
+    public class Sledgehammer : CustomItem
     {
         public override string UniqueNameID => "Sledgehammer";
         public override GameObject Prefab => Mod.Bundle.LoadAsset<GameObject>("Sledgehammer");
@@ -18,22 +20,22 @@ namespace KitchenSledgehammer
             new CProcessTool()
             {
                 Process = Refs.Research.ID,
-                Factor = 2
+                Factor = 1
             },
             new CEquippableTool()
             {
                 CanHoldItems = true
             },
-            new CDurationTool()
-            {
-                Type = (DurationToolType)11,
-                Factor = 2
-            }
+            //new CDurationTool()
+            //{
+            //    Type = (DurationToolType)11,
+            //    Factor = 2
+            //}
         };
 
         public override void OnRegister(GameDataObject gameDataObject)
         {
-            Prefab.ApplyMaterialToChild("Sledgehammer/Cube.003", "Plastic - White", "Plastic - Grey");
+            Prefab.ApplyMaterialToChild("Cube.003", "Plastic - White", "Plastic - Grey");
         }
-    }*/
+    }
 }

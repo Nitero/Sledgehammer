@@ -21,7 +21,7 @@ namespace KitchenSledgehammer
             {
                 new Appliance.Section
                 {
-                    Title = "Blunt",
+                    Title = "Provisional",
                     Description = "You can reach and pass things over this like with a hatch"
                 }
             }, new()))

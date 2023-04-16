@@ -54,8 +54,8 @@ namespace KitchenSledgehammer
             LogInfo("Attempting to register game data...");
 
             AddGameDataObject<HatchHammered>();
-            //AddGameDataObject<Sledgehammer>();
-            //AddGameDataObject<SledgehammerProvider>();
+            AddGameDataObject<Sledgehammer>();
+            AddGameDataObject<SledgehammerProvider>();
 
             LogInfo("Done loading game data.");
         }
@@ -115,27 +115,28 @@ namespace KitchenSledgehammer
 
 
 
-    [UpdateBefore(typeof(ItemTransferGroup))]
-    public class SwitchDualProvider : ItemInteractionSystem, IModSystem
-    {
-        protected override bool IsPossible(ref InteractionData data)
-        {
-            return true;
-        }
+    //[UpdateBefore(typeof(ItemTransferGroup))]
+    //public class SwitchDualProvider : ItemInteractionSystem, IModSystem
+    //{
+    //    protected override bool IsPossible(ref InteractionData data)
+    //    {
+    //        //if has hammer in hand + next to a wall
+    //        return true;
+    //    }
 
-        protected override void Perform(ref InteractionData data)
-        {
-            if (GameInfo.CurrentScene != SceneType.Kitchen)
-                return;
+    //    protected override void Perform(ref InteractionData data)
+    //    {
+    //        if (GameInfo.CurrentScene != SceneType.Kitchen)
+    //            return;
 
-            if (!EntityManager.RequireComponent<CPosition>(data.Interactor, out CPosition playerPosition))
-                return;
+    //        if (!EntityManager.RequireComponent<CPosition>(data.Interactor, out CPosition playerPosition))
+    //            return;
 
-            Transform closestWall = Helpers.TryToRepalceWallWithHatch(playerPosition.Position);
-            if(closestWall != null)
-                SRestoreHammeredWalls.Instance?.Hammered(closestWall.transform.position);
-        }
-    }
+    //        Transform closestWall = Helpers.TryToRepalceWallWithHatch(playerPosition.Position);
+    //        if (closestWall != null)
+    //            SRestoreHammeredWalls.Instance?.Hammered(closestWall.transform.position);
+    //    }
+    //}
 
 
     [HarmonyPatch]
