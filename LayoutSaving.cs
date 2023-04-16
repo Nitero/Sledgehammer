@@ -48,10 +48,14 @@ namespace KitchenSledgehammer
         struct CHasBeenHammered : IModComponent
         {
             public Vector3 WallPosition;
+            public Vector3 From;
+            public Vector3 To;
 
-            public CHasBeenHammered(Vector3 wallPosition)
+            public CHasBeenHammered(Vector3 wallPosition, Vector3 from, Vector3 to)
             {
                 WallPosition = wallPosition;
+                From = from;
+                To = to;
             }
         }
 
@@ -94,19 +98,64 @@ namespace KitchenSledgehammer
 
         public void Hammered(Vector3 wallPosition)
         {
-            EntityManager.AddComponentData(EntityManager.CreateEntity(), new CHasBeenHammered(wallPosition));
+            Vector3 from = new Vector3(Mathf.Floor(wallPosition.x), Mathf.Floor(wallPosition.y), Mathf.Floor(wallPosition.z));
+            Vector3 to = new Vector3(Mathf.Ceil(wallPosition.x), Mathf.Ceil(wallPosition.y), Mathf.Ceil(wallPosition.z));
+            //TODO: make this actually be what side the player made the wall from
+
+            EntityManager.AddComponentData(EntityManager.CreateEntity(), new CHasBeenHammered(wallPosition, from, to));
         }
 
         public bool IsHammeredWallBetween(Vector3 from, Vector3 to)
         {
+            from = new Vector3(Mathf.Round(from.x), 0, Mathf.Round(from.z));
+            to = new Vector3(Mathf.Round(to.x), 0, Mathf.Round(to.z));
+
             NativeArray<Entity> _hammeredWalls = HammeredWallsQuery.ToEntityArray(Allocator.TempJob);
             foreach (var wall in _hammeredWalls)
             {
                 if (!EntityManager.RequireComponent<CHasBeenHammered>(wall, out CHasBeenHammered hasBeenHammered))
                     continue;
 
-                if (Vector3.Distance(hasBeenHammered.WallPosition, from) <= 2)//TODO: actual logic here
-                    return true;
+                var sideA = hasBeenHammered.From;
+                var sideB = hasBeenHammered.To;
+
+                // Check if the two positions are in the same row or column
+                if (Mathf.Approximately(from.x, to.x))
+                {
+                    // Same column, check if the wall is between the two positions horizontally
+                    if ((Mathf.Approximately(sideA.x, from.x) && Mathf.Approximately(sideB.x, to.x))
+                    || (Mathf.Approximately(sideA.x, to.x) && Mathf.Approximately(sideB.x, from.x)))
+                    {
+                        if (Mathf.Min(from.z, to.z) <= sideA.z && sideA.z <= Mathf.Max(from.z, to.z))
+                            return true;
+                    }
+                }
+                else if (Mathf.Approximately(from.z, to.z))
+                {
+                    // Same row, check if the wall is between the two positions vertically
+                    if ((Mathf.Approximately(sideA.z, from.z) && Mathf.Approximately(sideB.z, to.z))
+                    || (Mathf.Approximately(sideA.z, to.z) && Mathf.Approximately(sideB.z, from.z)))
+                    {
+                        if (Mathf.Min(from.x, to.x) <= sideA.x && sideA.x <= Mathf.Max(from.x, to.x))
+                            return true;
+                    }
+                }
+                else
+                {
+                    // Diagonal match, check if the wall is between the two positions diagonally
+                    if ((Mathf.Approximately(sideA.x, from.x) && Mathf.Approximately(sideB.z, to.z))
+                    || (Mathf.Approximately(sideA.x, to.x) && Mathf.Approximately(sideB.z, from.z)))
+                    {
+                        if (Mathf.Min(from.z, to.z) <= sideA.z && sideA.z <= Mathf.Max(from.z, to.z))
+                            return true;
+                    }
+                    else if ((Mathf.Approximately(sideA.z, from.z) && Mathf.Approximately(sideB.x, to.x))
+                    || (Mathf.Approximately(sideA.z, to.z) && Mathf.Approximately(sideB.x, from.x)))
+                    {
+                        if (Mathf.Min(from.x, to.x) <= sideA.x && sideA.x <= Mathf.Max(from.x, to.x))
+                            return true;
+                    }
+                }
             }
 
             return false;
