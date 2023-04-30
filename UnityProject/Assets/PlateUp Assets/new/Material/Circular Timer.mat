@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Circular Timer
+  m_Shader: {fileID: 4800000, guid: 0000000deadbeef15deadf00d0000000, type: 3}
+  m_ShaderKeywords: _ISWAITINGPERIOD_ON
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: {}
+    m_Floats:
+    - _AlphaCutoff: 0.5
+    - _BorderWidth: 0.0135
+    - _FadeInner: 0.0091
+    - _FadeOuter: 0.0049
+    - _FadeWidth: 0.0391
+    - _InnerRadius: 0.236
+    - _IsWaitingPeriod: 1
+    - _OuterRadius: 0.354
+    - _TessEdgeLength: 16
+    - _TessMax: 25
+    - _TessMaxDisp: 25
+    - _TessMin: 10
+    - _TessPhongStrength: 0.5
+    - _TessValue: 16
+    - _Value: 0.68
+    m_Colors:
+    - _BackingColour: {r: 0.29245272, g: 0.26872543, b: 0.26872543, a: 0}
+    - _BackingColour1: {r: 0.1933662, g: 0.33962262, b: 0.16148093, a: 0}
+    - _Color0: {r: 0.19336617, g: 0.3396226, b: 0.1614809, a: 0}
+    - _Colour: {r: 0.6914378, g: 0.9433962, b: 0.3239586, a: 0}
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []

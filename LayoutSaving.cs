@@ -24,7 +24,7 @@ namespace KitchenSledgehammer
     {
         protected override void OnUpdate()
         {
-            //SRestoreHammeredWalls.Instance?.Reset(); //TODO: only in practise
+            SReplaceWalls.Instance?.Reset(); //TODO: only in practise
         }
     }
 
@@ -32,35 +32,36 @@ namespace KitchenSledgehammer
     {
         protected override void OnUpdate()
         {
-            SRestoreHammeredWalls.Instance?.Reset();
+            SReplaceWalls.Instance?.Reset();
+        }
+    }
+
+    struct CWallHasBeenReplaced : IModComponent
+    {
+        public Vector3 WallPosition;
+        public Vector3 SideA;
+        public Vector3 SideB;
+        public bool HasBeenHammered;
+
+        public CWallHasBeenReplaced(Vector3 wallPosition, Vector3 sideA, Vector3 sideB, bool hasBeenHammered)
+        {
+            WallPosition = wallPosition;
+            SideA = sideA;
+            SideB = sideB;
+            HasBeenHammered = hasBeenHammered;
         }
     }
 
     //[UpdateAfter(typeof(SLayout))]
     [UpdateAfter(typeof(SKitchenLayout))]
-    public class SRestoreHammeredWalls : NightSystem, IModSystem //TODO: why doesnt RestaurantInitialisationSystem work? or StartOfNightSystem?
+    public class SReplaceWalls : NightSystem, IModSystem //TODO: why doesnt RestaurantInitialisationSystem work? or StartOfNightSystem?
     {
-        private static SRestoreHammeredWalls _instance;
-        public static SRestoreHammeredWalls Instance => _instance;
+        private static SReplaceWalls _instance;
+        public static SReplaceWalls Instance => _instance;
 
-
-        private EntityQuery HammeredWallsQuery;
-        struct CHasBeenHammered : IModComponent
-        {
-            public Vector3 WallPosition;
-            public Vector3 From;
-            public Vector3 To;
-
-            public CHasBeenHammered(Vector3 wallPosition, Vector3 from, Vector3 to)
-            {
-                WallPosition = wallPosition;
-                From = from;
-                To = to;
-            }
-        }
+        private EntityQuery ReplacedWallsQuery;
 
         private bool _didSetup;
-
 
         public void Reset()
         {
@@ -70,7 +71,7 @@ namespace KitchenSledgehammer
         protected override void Initialise()
         {
             base.Initialise();
-            HammeredWallsQuery = GetEntityQuery(new QueryHelper().All(typeof(CHasBeenHammered)));
+            ReplacedWallsQuery = GetEntityQuery(new QueryHelper().All(typeof(CWallHasBeenReplaced)));
             _instance = this;
         }
 
@@ -84,81 +85,106 @@ namespace KitchenSledgehammer
             //if (GameInfo.CurrentScene == SceneType.Kitchen)//TODO: then doesnt work on franchise, maybe other stuff too?
             //    return;
 
-            NativeArray<Entity> _hammeredWalls = HammeredWallsQuery.ToEntityArray(Allocator.TempJob);
+            NativeArray<Entity> replacedWalls = ReplacedWallsQuery.ToEntityArray(Allocator.TempJob);
+            bool alreadyReplacedWalls = replacedWalls.Length > 0;
+            replacedWalls.Dispose();
 
             Transform floorplan = GameObject.Find("Kitchen Floorplan(Clone)").transform;
-            foreach (var wall in _hammeredWalls)
+            foreach (Transform child in floorplan.transform)
             {
-                if (!EntityManager.RequireComponent<CHasBeenHammered>(wall, out CHasBeenHammered hasBeenHammered))
+                if (child.name != "Short Wall Section(Clone)" || !child.gameObject.activeSelf)
                     continue;
 
-                Helpers.TryToRepalceWallWithHatch(hasBeenHammered.WallPosition, floorplan);
+                child.gameObject.SetActive(false);
+                
+                if (alreadyReplacedWalls)
+                    continue;
+
+                Entity entity = EntityManager.CreateEntity();
+                EntityManager.AddComponentData(entity, new CCreateAppliance{ ID = Refs.HatchHammered.ID });
+                EntityManager.AddComponentData(entity, new CPosition(child.position, child.rotation));
+                EntityManager.AddComponentData(entity, new CFixedRotation());
+
+                //TODO: make this actually be what side the player made the wall from
+                Vector3 from = new Vector3(Mathf.Floor(child.position.x), Mathf.Floor(child.position.y), Mathf.Floor(child.position.z));
+                Vector3 to = new Vector3(Mathf.Ceil(child.position.x), Mathf.Ceil(child.position.y), Mathf.Ceil(child.position.z));
+                EntityManager.AddComponentData(entity, new CWallHasBeenReplaced(child.position, from, to, false));
             }
         }
 
-        public void Hammered(Vector3 wallPosition)
+        public void Hammered(Entity replacedWall)
         {
-            Vector3 from = new Vector3(Mathf.Floor(wallPosition.x), Mathf.Floor(wallPosition.y), Mathf.Floor(wallPosition.z));
-            Vector3 to = new Vector3(Mathf.Ceil(wallPosition.x), Mathf.Ceil(wallPosition.y), Mathf.Ceil(wallPosition.z));
-            //TODO: make this actually be what side the player made the wall from
+            if (!EntityManager.RequireComponent<CWallHasBeenReplaced>(replacedWall, out CWallHasBeenReplaced cReplacedWall))
+                return;
 
-            EntityManager.AddComponentData(EntityManager.CreateEntity(), new CHasBeenHammered(wallPosition, from, to));
+            cReplacedWall.HasBeenHammered = true;
+            EntityManager.SetComponentData(replacedWall, cReplacedWall);
         }
 
-        public bool IsHammeredWallBetween(Vector3 from, Vector3 to)
+        public bool IsReplacedWallHammeredBetween(Vector3 from, Vector3 to)
         {
             from = new Vector3(Mathf.Round(from.x), 0, Mathf.Round(from.z));
             to = new Vector3(Mathf.Round(to.x), 0, Mathf.Round(to.z));
 
-            NativeArray<Entity> _hammeredWalls = HammeredWallsQuery.ToEntityArray(Allocator.TempJob);
-            foreach (var wall in _hammeredWalls)
+            NativeArray<Entity> replacedWalls = ReplacedWallsQuery.ToEntityArray(Allocator.TempJob);
+            try
             {
-                if (!EntityManager.RequireComponent<CHasBeenHammered>(wall, out CHasBeenHammered hasBeenHammered))
-                    continue;
+                foreach (Entity replacedWall in replacedWalls)
+                {
+                    if (!EntityManager.RequireComponent<CWallHasBeenReplaced>(replacedWall, out CWallHasBeenReplaced cReplacedWall))
+                        continue;
 
-                var sideA = hasBeenHammered.From;
-                var sideB = hasBeenHammered.To;
+                    if (!cReplacedWall.HasBeenHammered)
+                        continue;
 
-                // Check if the two positions are in the same row or column
-                if (Mathf.Approximately(from.x, to.x))
-                {
-                    // Same column, check if the wall is between the two positions horizontally
-                    if ((Mathf.Approximately(sideA.x, from.x) && Mathf.Approximately(sideB.x, to.x))
-                    || (Mathf.Approximately(sideA.x, to.x) && Mathf.Approximately(sideB.x, from.x)))
+                    var sideA = cReplacedWall.SideA;
+                    var sideB = cReplacedWall.SideB;
+
+                    // Check if the two positions are in the same row or column
+                    if (Mathf.Approximately(from.x, to.x))
                     {
-                        if (Mathf.Min(from.z, to.z) <= sideA.z && sideA.z <= Mathf.Max(from.z, to.z))
-                            return true;
+                        // Same column, check if the wall is between the two positions horizontally
+                        if ((Mathf.Approximately(sideA.x, from.x) && Mathf.Approximately(sideB.x, to.x))
+                        || (Mathf.Approximately(sideA.x, to.x) && Mathf.Approximately(sideB.x, from.x)))
+                        {
+                            if (Mathf.Min(from.z, to.z) <= sideA.z && sideA.z <= Mathf.Max(from.z, to.z))
+                                return true;
+                        }
+                    }
+                    else if (Mathf.Approximately(from.z, to.z))
+                    {
+                        // Same row, check if the wall is between the two positions vertically
+                        if ((Mathf.Approximately(sideA.z, from.z) && Mathf.Approximately(sideB.z, to.z))
+                        || (Mathf.Approximately(sideA.z, to.z) && Mathf.Approximately(sideB.z, from.z)))
+                        {
+                            if (Mathf.Min(from.x, to.x) <= sideA.x && sideA.x <= Mathf.Max(from.x, to.x))
+                                return true;
+                        }
+                    }
+                    else
+                    {
+                        // Diagonal match, check if the wall is between the two positions diagonally
+                        if ((Mathf.Approximately(sideA.x, from.x) && Mathf.Approximately(sideB.z, to.z))
+                        || (Mathf.Approximately(sideA.x, to.x) && Mathf.Approximately(sideB.z, from.z)))
+                        {
+                            if (Mathf.Min(from.z, to.z) <= sideA.z && sideA.z <= Mathf.Max(from.z, to.z))
+                                return true;
+                        }
+                        else if ((Mathf.Approximately(sideA.z, from.z) && Mathf.Approximately(sideB.x, to.x))
+                        || (Mathf.Approximately(sideA.z, to.z) && Mathf.Approximately(sideB.x, from.x)))
+                        {
+                            if (Mathf.Min(from.x, to.x) <= sideA.x && sideA.x <= Mathf.Max(from.x, to.x))
+                                return true;
+                        }
                     }
                 }
-                else if (Mathf.Approximately(from.z, to.z))
-                {
-                    // Same row, check if the wall is between the two positions vertically
-                    if ((Mathf.Approximately(sideA.z, from.z) && Mathf.Approximately(sideB.z, to.z))
-                    || (Mathf.Approximately(sideA.z, to.z) && Mathf.Approximately(sideB.z, from.z)))
-                    {
-                        if (Mathf.Min(from.x, to.x) <= sideA.x && sideA.x <= Mathf.Max(from.x, to.x))
-                            return true;
-                    }
-                }
-                else
-                {
-                    // Diagonal match, check if the wall is between the two positions diagonally
-                    if ((Mathf.Approximately(sideA.x, from.x) && Mathf.Approximately(sideB.z, to.z))
-                    || (Mathf.Approximately(sideA.x, to.x) && Mathf.Approximately(sideB.z, from.z)))
-                    {
-                        if (Mathf.Min(from.z, to.z) <= sideA.z && sideA.z <= Mathf.Max(from.z, to.z))
-                            return true;
-                    }
-                    else if ((Mathf.Approximately(sideA.z, from.z) && Mathf.Approximately(sideB.x, to.x))
-                    || (Mathf.Approximately(sideA.z, to.z) && Mathf.Approximately(sideB.x, from.x)))
-                    {
-                        if (Mathf.Min(from.x, to.x) <= sideA.x && sideA.x <= Mathf.Max(from.x, to.x))
-                            return true;
-                    }
-                }
+
+                return false;
             }
-
-            return false;
+            finally
+            {
+                replacedWalls.Dispose();
+            }
         }
     }
 }

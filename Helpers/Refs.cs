@@ -10,6 +10,7 @@ namespace KitchenSledgehammer
 
         // Processes
         public static Process Research => Helper.Find<Process>(ProcessReferences.Upgrade);//TODO: replace with new custom process
+        public static Process SledgehammerProcess => Helper.Find<Process, SledgehammerProcess>();
 
         // Appliances
         public static Appliance SledgehammerProvider => Helper.Find<Appliance, SledgehammerProvider>();

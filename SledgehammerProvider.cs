@@ -10,7 +10,7 @@ namespace KitchenSledgehammer
     {
         public override string UniqueNameID => "SledgehammerProvider";
         public override GameObject Prefab => Mod.Bundle.LoadAsset<GameObject>("SledgehammerProvider");
-        public override PriceTier PriceTier => PriceTier.ExtremelyExpensive;
+        public override PriceTier PriceTier => PriceTier.VeryCheap;//TODO: ExtremelyExpensive
         public override RarityTier RarityTier => RarityTier.Common;//TODO: Rare
         public override bool IsPurchasable => true;
         //public override bool IsPurchasableAsUpgrade => true;

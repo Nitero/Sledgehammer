@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Lake Surface
+  m_Shader: {fileID: 4800000, guid: 0000000deadbeef15deadf00d0000000, type: 3}
+  m_ShaderKeywords:
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: {}
+    m_Floats:
+    - _AlphaCutoff: 0.5
+    - _Scale: 0.01
+    - _TimeScale: 0.4
+    m_Colors:
+    - _Color0: {r: 0.3747241, g: 0.5483328, b: 0.7169812, a: 1}
+    - _Color1: {r: 1, g: 0.9785934, b: 0.90943396, a: 0.12941177}
+    - _Color2: {r: 45.17647, g: 47.184315, b: 47.937256, a: 1}
+    - _DaySpec: {r: 13.76636, g: 8.721097, b: 6.342616, a: 1}
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
+    - _NightSpec: {r: 1.8214384, g: 3.0219321, b: 7.9066987, a: 1}
+  m_BuildTextureStacks: []

@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Outline Shader
+  m_Shader: {fileID: 4800000, guid: 0000000deadbeef15deadf00d0000000, type: 3}
+  m_ShaderKeywords:
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: {}
+    m_Floats:
+    - _BorderColourBaseMultiplier: 0.627
+    - _InnerStrength: 7.4
+    - _OuterStrength: 9.4
+    - _Radius: 14.3
+    - _Sigma: 2.69
+    - _TransparencyBase: 1.173
+    - _TransparencySmoothness: 0.793
+    - _TransparencyThreshold: 1.454
+    - _TransparencyVariance: 0.747
+    - _Width: 0.99
+    m_Colors:
+    - _BorderColour: {r: 0.4811321, g: 0.2250525, b: 0.18337476, a: 0.33333334}
+  m_BuildTextureStacks: []
