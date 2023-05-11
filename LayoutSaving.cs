@@ -104,6 +104,21 @@ namespace KitchenSledgehammer
                 EntityManager.AddComponentData(entity, new CCreateAppliance{ ID = Refs.HatchHammered.ID });
                 EntityManager.AddComponentData(entity, new CPosition(child.position, child.rotation));
                 EntityManager.AddComponentData(entity, new CFixedRotation());
+                //EntityManager.AddComponentData(entity, new CRequiresView() { PhysicsDriven = true, Type = ViewType.Appliance });
+
+                //Entity progressView = EntityManager.CreateEntity();
+                //ProgressView progressView = progressView.AddComponent<ProgressView>();
+                //deconstructorView.progressView = progressView;
+                //EntityManager.AddComponentData(entity, new CHasProgressIndicator() { Indicator = progressView });
+                //EntityManager.AddComponentData(entity, new CHasProgressIndicator() {  });
+                //EntityManager.AddComponentData(entity, new CProgressIndicator()
+                //{
+                //    Progress = 0.1f,
+                //    IsBad = false,
+                //    Process = Refs.SledgehammerProcess.ID,
+                //    IsUnknownLength = false,
+                //    CurrentChange = 0,
+                //});
 
                 //TODO: make this actually be what side the player made the wall from
                 Vector3 from = new Vector3(Mathf.Floor(child.position.x), Mathf.Floor(child.position.y), Mathf.Floor(child.position.z));

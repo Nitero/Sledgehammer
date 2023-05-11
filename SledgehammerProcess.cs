@@ -32,4 +32,22 @@ namespace KitchenSledgehammer
         //    }
         //}
     }
+
+
+    public class SledgehammerItemProcess : CustomItemProcess
+    {
+        //public override Process Process => 
+        //public override Item Result { get; protected set; }
+        //public override float Duration { get; protected set; }
+        //public override bool IsBad { get; protected set; }
+        //public override bool RequiresWrapper { get; protected set; }
+    }
+
+    public class SledgehammerApplianceProcess : CustomApplianceProccess
+    {
+        public override Process Process => Refs.SledgehammerProcess;
+        public override bool IsAutomatic => false;
+        public override float Speed => 1f;
+        public override ProcessValidity Validity => ProcessValidity.Generic;
+    }
 }

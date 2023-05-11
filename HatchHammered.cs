@@ -56,18 +56,31 @@ namespace KitchenSledgehammer
             new CFireImmune(),
             new CImmovable(),
             //new CIDeconstruct(),
-
-            //new CTakesDuration(){ Total = 5f, Manual = true, ManualNeedsEmptyHands = false, IsInverse = false, RelevantTool = DurationToolType.FireExtinguisher, Mode = InteractionMode.Items, PreserveProgress = true, IsLocked = true},//without isnt selectable
-            //KitchenPropertiesUtils.GetCDisplayDuration(false, Refs.SledgehammerProcess.ID, false),//without this no UI
-
+            
+            //new CTakesDuration(){ Total = 5f, Manual = true, ManualNeedsEmptyHands = false, IsInverse = false, RelevantTool = DurationToolType.None, Mode = InteractionMode.Items, PreserveProgress = true, IsLocked = true},//without isnt selectable
+            KitchenPropertiesUtils.GetCTakesDuration(5f, 0, false, true, false, DurationToolType.FireExtinguisher, InteractionMode.Appliances, false, true, false, false, 0),//without isnt selectable
+            KitchenPropertiesUtils.GetCDisplayDuration(false, Refs.SledgehammerProcess.ID, false),//without this no UI
+            
             //new CLinkedView(){ Identifier = },
-            //new CRequiresView(){ PhysicsDriven = false, ViewMode = ViewMode.World, Type = ViewType.Appliance},//ProgressView
+            //new CRequiresView(){ PhysicsDriven = false, Type = ViewType.Appliance},//ProgressView //ViewMode = ViewMode.World
             //new CDestroyAfterDuration(){},
             //new CApplyProcessAfterDuration(){ BreakOnFailure = false },
             //new CLockDurationTimeOfDay(){ LockDuringNight = true, LockDuringDay = false },
             //new CStoredPlates(){ PlatesCount = 0},
             //new CStoredTables(),
         };
+
+
+        //public override bool PreInteract(InteractionData data, bool isSecondary = false)
+        //{
+        //    Debug.Log("~~~ " + (data.Interactor.Index == Refs.Sledgehammer.ID));//just doesnt happen
+        //    return true;
+        //}
+        //public override bool IsInteractionPossible(InteractionData data)
+        //{
+        //    Debug.Log("--- " + (data.Interactor.Index == Refs.Sledgehammer.ID));//just doesnt happen
+        //    return true;
+        //}
 
 
         public class HatchHammeredViewSystem : ViewSystemBase
@@ -117,11 +130,15 @@ namespace KitchenSledgehammer
                 }
             }
 
+            public GameObject Hatch;
             public GameObject Wall;
+            public ProgressView progressView;
 
             protected override void UpdateData(ViewData data)
             {
+                Hatch.SetActive(data.IsHammered);
                 Wall.SetActive(!data.IsHammered);
+                //progressView.UpdateData(data);
             }
         }
 
@@ -147,14 +164,14 @@ namespace KitchenSledgehammer
 
         public override void OnRegister(GameDataObject gameDataObject)
         {
-            var parent = Prefab.GetChild("wallsection");
+            var hatch = Prefab.GetChild("wallsection");
 
             //Helper.SetupThinCounter(Prefab);
             //Helper.SetupThinCounterLimitedItem(Prefab, GetPrefab("HatchHammered"), false);
 
-            parent.ApplyMaterialToChild("Cube", "Wall Main", "BaseDefault", "Wall Main");
-            parent.ApplyMaterialToChild("Cube.001", "Wall Main", "Wall Main");
-            parent.ApplyMaterialToChild("Cube.002", "Wood - Default");
+            hatch.ApplyMaterialToChild("Cube", "Wall Main", "BaseDefault", "Wall Main");
+            hatch.ApplyMaterialToChild("Cube.001", "Wall Main", "Wall Main");
+            hatch.ApplyMaterialToChild("Cube.002", "Wood - Default");
 
             var wall = Prefab.GetChild("WallHammerable");
             wall.GetChild("wallsection").ApplyMaterialToChild("Cube", "Wall Main", "BaseDefault", "Wall Main");//TODO: there are wrong(?)
@@ -163,6 +180,10 @@ namespace KitchenSledgehammer
 
             HatchHammeredView deconstructorView = Prefab.AddComponent<HatchHammeredView>();
             deconstructorView.Wall = wall;
+            deconstructorView.Hatch = hatch;
+
+            //ProgressView progressView = Prefab.AddComponent<ProgressView>();
+            //deconstructorView.progressView = progressView;
         }
     }
 }

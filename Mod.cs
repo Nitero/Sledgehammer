@@ -55,6 +55,7 @@ namespace KitchenSledgehammer
 
             AddGameDataObject<HatchHammered>();
             AddGameDataObject<SledgehammerProcess>();
+            //AddGameDataObject<SledgehammerApplianceProcess>();
             AddGameDataObject<Sledgehammer>();
             AddGameDataObject<SledgehammerProvider>();
 
@@ -83,6 +84,8 @@ namespace KitchenSledgehammer
             // Perform actions when game data is built
             Events.BuildGameDataEvent += delegate (object s, BuildGameDataEventArgs args)
             {
+                //AddEnum<DurationToolType>(58);
+
                 // Sledgehammer
                 /*AddEnum<DurationToolType>(11);
 
@@ -102,6 +105,15 @@ namespace KitchenSledgehammer
                 }*/
             };
         }
+
+        //public void AddEnum<T>(int numInEnum) where T : Enum
+        //{
+        //    Type enumType = typeof(T);
+        //    object value = System.Convert.ChangeType(numInEnum, Enum.GetUnderlyingType(enumType));
+        //    object enumValue = Enum.ToObject(enumType, value);
+        //    T cursedEnum = (T)enumValue;
+        //    Mod.LogInfo(cursedEnum);
+        //}
 
         #region Logging
         public static void LogInfo(string _log) { Debug.Log($"[{MOD_NAME}] " + _log); }
