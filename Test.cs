@@ -1,6 +1,8 @@
 ﻿using HarmonyLib;
 using Kitchen;
+using KitchenData;
 using KitchenMods;
+using System.Runtime.CompilerServices;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
@@ -90,20 +92,148 @@ namespace KitchenSledgehammer
         //    Debug.Log("CANCEL");
         //    return false;//run original
         //}
-        [HarmonyPatch(typeof(InteractionSystem), "ShouldAct")]
-        [HarmonyPrefix]
-        static bool ShouldAct_Prefix(ref bool __result, InteractionData interaction_data) //prevents hammering wall with hands during day
-        {
-            if (interaction_data.Interactor.Index == Refs.Sledgehammer.ID)
-            {
-                Debug.Log("CANCEL");
-                __result = false;
-                return false;//run original
-            }
+        //[HarmonyPatch(typeof(InteractionSystem), "ShouldAct")]
+        //[HarmonyPrefix]
+        //static bool ShouldAct_Prefix(ref bool __result, InteractionData interaction_data) //prevents hammering wall with hands during day
+        //{
+        //    if (interaction_data.Interactor.Index == Refs.Sledgehammer.ID)
+        //    {
+        //        Debug.Log("CANCEL");
+        //        __result = false;
+        //        return false;//run original
+        //    }
 
-            __result = true;
-            return true;//run original
-        }
+        //    __result = true;
+        //    return true;//run original
+        //}
+
+        //[HarmonyPatch(typeof(HighlightInteraction), "IsPossible")]
+        //[HarmonyPostfix]
+        //static bool IsPossible_Postfix(ref bool __result, InteractionData data)
+        //{
+        //    if (data.Interactor.Index == Refs.Sledgehammer.ID)
+        //    {
+        //        Debug.Log("CANCEL");
+        //        __result = false;
+        //        return false;//run original
+        //    }
+
+        //    __result = true;
+        //    return true;//run original
+        //}
+
+        //[HarmonyReversePatch]
+        //[HarmonyPatch(typeof(InteractionSystem), "IsPossible")]
+        //[MethodImpl(MethodImplOptions.NoInlining)]
+        //static bool BaseMethodDummy(HighlightInteraction instance, ref InteractionData data) { return false; }
+
+        //[HarmonyPatch(typeof(HighlightInteraction), "IsPossible")]
+        ////[HarmonyPostfix]
+        //static void IsPossible_Postfix(HighlightInteraction __instance, ref bool __result, ref InteractionData data)
+        //{
+        //    var b = BaseMethodDummy(__instance, ref data);
+        //    Debug.Log("TTTTTTEST " + b);
+        //    //return BaseMethodDummy(__instance, ref data);
+        //}
+
+        //[HarmonyReversePatch]
+        //[HarmonyPatch(typeof(InteractionSystem), "IsPossible")]
+        //[MethodImpl(MethodImplOptions.NoInlining)]
+        //static bool IsPossibleDummy(ApplianceInteractionSystem instance, ref InteractionData data) { return false; }
+
+        //[HarmonyPatch(typeof(ApplianceInteractionSystem), "IsPossible")]
+        //[HarmonyPostfix]
+        //static void IsPossible_Postfix(ApplianceInteractionSystem __instance, ref bool __result, ref InteractionData data)
+        //{
+        //    var b = IsPossibleDummy(__instance, ref data);
+        //    Debug.Log("TTTTTTEST " + b);
+        //    //return BaseMethodDummy(__instance, ref data);
+        //}
+
+
+
+        //[HarmonyPatch(typeof(MakePing), "Perform")]
+        //[HarmonyPostfix]
+        //public static void Perform_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("ping Perform");
+        //}
+        //[HarmonyPatch(typeof(MakePing), "IsPossible")]
+        //[HarmonyPostfix]
+        //public static void IsPossibleA_Postfix(ref bool __result, ref InteractionData data)
+        //{
+        //    Debug.Log("ping IsPossible");
+        //    __result = false;
+        //}
+
+        //[HarmonyPatch(typeof(HighlightInteraction), "IsPossible")]
+        //[HarmonyPostfix]
+        //public static void IsPossibleB_Postfix(ref bool __result, ref InteractionData data)
+        //{
+        //    Debug.Log("HighlightInteraction IsPossible");
+        //    __result = false;
+        //}
+
+        //[HarmonyPatch(typeof(TakeFromHolder), "Perform")]
+        //[HarmonyPostfix]
+        //static void A_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("A");
+        //}
+        //[HarmonyPatch(typeof(TakeFromProvider), "Perform")]
+        //[HarmonyPostfix]
+        //static void B_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("B");
+        //}
+        //[HarmonyPatch(typeof(TakeFromToolUser), "Perform")]
+        //[HarmonyPostfix]
+        //static void C_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("C");
+        //}
+        //[HarmonyPatch(typeof(InteractRotatePush), "Perform")]
+        //[HarmonyPostfix]
+        //static void D_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("D");
+        //}
+        //[HarmonyPatch(typeof(PickUpAndDropAppliance), "Perform")]
+        //[HarmonyPostfix]
+        //static void E_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("E");
+        //}
+        //[HarmonyPatch(typeof(PickUpAppliance), "Perform")]
+        //[HarmonyPostfix]
+        //static void F_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("F");
+        //}
+        //[HarmonyPatch(typeof(PerformDirectProviderInsertion), "Perform")]
+        //[HarmonyPostfix]
+        //static void G_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("G");
+        //}
+        //[HarmonyPatch(typeof(TriggerActivation), "Perform")]
+        //[HarmonyPostfix]
+        //static void H_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("H");
+        //}
+        //[HarmonyPatch(typeof(PseudoInteractProcess), "Perform")]
+        //[HarmonyPostfix]
+        //static void I_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("I");
+        //}
+        //[HarmonyPatch(typeof(ApplianceInteractionSystem), "Perform")]
+        //[HarmonyPostfix]
+        //static void J_Postfix(ref InteractionData data)
+        //{
+        //    Debug.Log("J");
+        //}
     }
 
 
@@ -253,8 +383,10 @@ namespace KitchenSledgehammer
     }
 
 
+
     [UpdateBefore(typeof(ItemTransferGroup))]
-    public class HammerInteractionSystem : ItemInteractionSystem, IModSystem// ItemInteractionSystem works, but still can progress duration with hand //OR ApplianceInteractionSystem? nvm just at night
+    //public class HammerInteractionSystem : ItemInteractionSystem, IModSystem// ItemInteractionSystem works, but still can progress duration with hand //OR ApplianceInteractionSystem? nvm just at night
+    public class HammerInteractionSystem : InteractionSystem, IModSystem
     {
         private CTakesDuration duration;
         //private CProgressIndicator duration;
@@ -293,7 +425,7 @@ namespace KitchenSledgehammer
                 if (item.ID == Refs.Sledgehammer.ID && heldBy.Holder == data.Interactor)//TODO: optimize this to no query?
                 {
                     sledgehammers.Dispose();
-                    Debug.Log("POSSIBLE");
+                    //Debug.Log("POSSIBLE " + duration.Total + " / "+ duration.Remaining);
                     //duration.IsLocked = false;
                     //duration.Active = true;
                     //duration.Remaining = 0.5f;
@@ -315,9 +447,20 @@ namespace KitchenSledgehammer
 
         protected override void Perform(ref InteractionData data)
         {
-            if (Require(data.Target, out duration))
+
+            if (Require(data.Target, out wallReplaced))
             {
                 //duration.IsLocked = false;
+                //duration.Active = true;
+                wallReplaced.HasBeenHammerAttemptedToday = true;
+                EntityManager.SetComponentData(data.Target, wallReplaced);
+            }
+
+            if (Require(data.Target, out duration))
+            {
+                Debug.Log("PERFORM " + duration.Remaining);
+                duration.Manual = true;
+                duration.IsLocked = false;
                 //duration.Active = true;
                 duration.Remaining -= 0.1f * 1f;
                 duration.CurrentChange = 1f;
@@ -328,4 +471,44 @@ namespace KitchenSledgehammer
             //TODO: why does this only happen with no duration?
         }
     }
+
+
+    [UpdateInGroup(typeof(DurationLocks))]
+    public class LockDurationByTimeOfDay : RestaurantSystem
+    {
+        EntityQuery wallQuery;
+
+        protected override void Initialise()
+        {
+            base.Initialise();
+            wallQuery = GetEntityQuery(typeof(CTakesDuration), typeof(CWallHasBeenReplaced));
+        }
+
+        protected override void OnUpdate()
+        {
+            using NativeArray<Entity> entities = wallQuery.ToEntityArray(Allocator.Temp);
+            using NativeArray<CTakesDuration> durations = wallQuery.ToComponentDataArray<CTakesDuration>(Allocator.Temp);
+            using NativeArray<CWallHasBeenReplaced> walls = wallQuery.ToComponentDataArray<CWallHasBeenReplaced>(Allocator.Temp);
+
+            for (int i = 0; i < entities.Length; i++)
+            {
+                Entity entity = entities[i];
+                CTakesDuration duration = durations[i];
+                CWallHasBeenReplaced wall = walls[i];
+
+                //if (Has<SIsDayTime>() && time.LockDuringDay || Has<SIsNightTime>() && time.LockDuringNight)
+                if (!wall.HasBeenHammerAttemptedToday)
+                {
+                    duration.IsLocked = true;
+                    Set(entity, duration);
+                }
+            }
+        }
+    }
+
+
+    //struct CWallLockDuration : IModComponent
+    //public struct CWallLockDuration : IApplianceProperty, IAttachableProperty, IComponentData
+    //{
+    //}
 }

@@ -52,15 +52,19 @@ namespace KitchenSledgehammer
         //};
         public override List<IApplianceProperty> Properties => new List<IApplianceProperty>()
         {
-            new CIsInteractive(),//{ IsLowPriority = false },
+            //new CIsInteractive(),//{ IsLowPriority = false },
             new CFireImmune(),
             new CImmovable(),
             //new CIDeconstruct(),
             
             //new CTakesDuration(){ Total = 5f, Manual = true, ManualNeedsEmptyHands = false, IsInverse = false, RelevantTool = DurationToolType.None, Mode = InteractionMode.Items, PreserveProgress = true, IsLocked = true},//without isnt selectable
-            KitchenPropertiesUtils.GetCTakesDuration(5f, 0, false, true, false, DurationToolType.FireExtinguisher, InteractionMode.Appliances, false, true, false, false, 0),//without isnt selectable
+            //KitchenPropertiesUtils.GetCTakesDuration(5f, 0, false, true, false, DurationToolType.FireExtinguisher, InteractionMode.Appliances, false, true, false, false, 0),//without isnt selectable
             KitchenPropertiesUtils.GetCDisplayDuration(false, Refs.SledgehammerProcess.ID, false),//without this no UI
+            KitchenPropertiesUtils.GetCTakesDuration(10f, 10f, false, false, false, DurationToolType.None, InteractionMode.Appliances, false, true, false, false, 0),
             
+            //new CItemHolder
+            //new CItemHolderFilter
+            //new CProgressIndicator(){ CurrentChange = 0, IsBad = false, IsUnknownLength = false, Process = 0, Progress = 0 }
             //new CLinkedView(){ Identifier = },
             //new CRequiresView(){ PhysicsDriven = false, Type = ViewType.Appliance},//ProgressView //ViewMode = ViewMode.World
             //new CDestroyAfterDuration(){},

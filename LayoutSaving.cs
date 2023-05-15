@@ -42,6 +42,7 @@ namespace KitchenSledgehammer
         public Vector3 SideA;
         public Vector3 SideB;
         public bool HasBeenHammered;
+        public bool HasBeenHammerAttemptedToday;
 
         public CWallHasBeenReplaced(Vector3 wallPosition, Vector3 sideA, Vector3 sideB, bool hasBeenHammered)
         {
@@ -49,6 +50,7 @@ namespace KitchenSledgehammer
             SideA = sideA;
             SideB = sideB;
             HasBeenHammered = hasBeenHammered;
+            HasBeenHammerAttemptedToday = false;
         }
     }
 
@@ -87,6 +89,19 @@ namespace KitchenSledgehammer
 
             NativeArray<Entity> replacedWalls = ReplacedWallsQuery.ToEntityArray(Allocator.TempJob);
             bool alreadyReplacedWalls = replacedWalls.Length > 0;
+            foreach (Entity replacedWall in replacedWalls)
+            {
+                if (EntityManager.RequireComponent<CWallHasBeenReplaced>(replacedWall, out CWallHasBeenReplaced cWallHasBeenReplaced))
+                {
+                    cWallHasBeenReplaced.HasBeenHammerAttemptedToday = false;
+                    EntityManager.SetComponentData(replacedWall, cWallHasBeenReplaced);
+                }
+                if (EntityManager.RequireComponent<CTakesDuration>(replacedWall, out CTakesDuration cTakesDuration))
+                {
+                    cTakesDuration.Manual = false;
+                    EntityManager.SetComponentData(replacedWall, cTakesDuration);
+                }
+            }
             replacedWalls.Dispose();
 
             Transform floorplan = GameObject.Find("Kitchen Floorplan(Clone)").transform;
