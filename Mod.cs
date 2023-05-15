@@ -1,21 +1,9 @@
-﻿using Controllers;
-using HarmonyLib;
-using Kitchen;
-using Kitchen.Layouts;
-using KitchenData;
+﻿using Kitchen;
 using KitchenLib;
 using KitchenLib.Event;
-using KitchenLib.Preferences;
-using KitchenLib.References;
-using KitchenLib.Utils;
 using KitchenMods;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Unity.Collections;
-using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace KitchenSledgehammer
@@ -53,7 +41,7 @@ namespace KitchenSledgehammer
         {
             LogInfo("Attempting to register game data...");
 
-            AddGameDataObject<HatchHammered>();
+            AddGameDataObject<WallReplaced>();
             AddGameDataObject<SledgehammerProcess>();
             //AddGameDataObject<SledgehammerApplianceProcess>();
             AddGameDataObject<Sledgehammer>();
@@ -65,9 +53,6 @@ namespace KitchenSledgehammer
 
         protected override void OnPostActivate(KitchenMods.Mod mod)
         {
-            // TODO: Uncomment the following if you have an asset bundle.
-            // TODO: Also, make sure to set EnableAssetBundleDeploy to 'true' in your ModName.csproj
-
             LogInfo("Attempting to load asset bundle...");
             Bundle = mod.GetPacks<AssetBundleModPack>().SelectMany(e => e.AssetBundles).First();
             LogInfo("Done loading asset bundle.");
@@ -84,36 +69,8 @@ namespace KitchenSledgehammer
             // Perform actions when game data is built
             Events.BuildGameDataEvent += delegate (object s, BuildGameDataEventArgs args)
             {
-                //AddEnum<DurationToolType>(58);
-
-                // Sledgehammer
-                /*AddEnum<DurationToolType>(11);
-
-                if (TryRemoveComponentsFromAppliance<Appliance>(Refs.ResearchDesk.ID, new Type[] { typeof(CTakesDuration) }))
-                {
-                    Refs.ResearchDesk.Properties.Add(GetCTakesDuration(5, 0, false, true, false, (DurationToolType)11, InteractionMode.Items, false, true, false, false, 0));
-                }
-
-                if (TryRemoveComponentsFromAppliance<Appliance>(Refs.DiscountDesk.ID, new Type[] { typeof(CTakesDuration) }))
-                {
-                    Refs.DiscountDesk.Properties.Add(GetCTakesDuration(5, 0, false, true, false, (DurationToolType)11, InteractionMode.Items, false, true, false, false, 0));
-                }
-
-                if (TryRemoveComponentsFromAppliance<Appliance>(Refs.CopyingDesk.ID, new Type[] { typeof(CTakesDuration) }))
-                {
-                    Refs.CopyingDesk.Properties.Add(GetCTakesDuration(5, 0, false, true, false, (DurationToolType)11, InteractionMode.Items, false, true, false, false, 0));
-                }*/
             };
         }
-
-        //public void AddEnum<T>(int numInEnum) where T : Enum
-        //{
-        //    Type enumType = typeof(T);
-        //    object value = System.Convert.ChangeType(numInEnum, Enum.GetUnderlyingType(enumType));
-        //    object enumValue = Enum.ToObject(enumType, value);
-        //    T cursedEnum = (T)enumValue;
-        //    Mod.LogInfo(cursedEnum);
-        //}
 
         #region Logging
         public static void LogInfo(string _log) { Debug.Log($"[{MOD_NAME}] " + _log); }

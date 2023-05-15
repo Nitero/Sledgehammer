@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 65921871281403238}
   - component: {fileID: 208961344497488095}
   m_Layer: 0
-  m_Name: WallHatchHammered
+  m_Name: WallReplaced
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
