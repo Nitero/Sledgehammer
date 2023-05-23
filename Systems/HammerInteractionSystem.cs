@@ -11,6 +11,7 @@ namespace KitchenSledgehammer
     {
         private CTakesDuration duration;
         private CWallReplaced wallReplaced;
+        private CToolUser toolUser;
         private EntityQuery sledgehammerQuery;
         protected override bool RequireHold => true;
         protected override bool RequirePress => false;
@@ -27,16 +28,16 @@ namespace KitchenSledgehammer
                 return false;
             if (wallReplaced.HasBeenHammered)
                 return false;
+            if (!Require(data.Interactor, out toolUser))
+                return false;
 
             using NativeArray<Entity> sledgehammers = sledgehammerQuery.ToEntityArray(Allocator.TempJob);
             foreach (var sledgehammer in sledgehammers)
             {
                 if (!EntityManager.RequireComponent<CItem>(sledgehammer, out CItem item))
                     continue;
-                if (!EntityManager.RequireComponent<CHeldBy>(sledgehammer, out CHeldBy heldBy))
-                    continue;
 
-                if (item.ID == Refs.Sledgehammer.ID && heldBy.Holder == data.Interactor)
+                if (item.ID == Refs.Sledgehammer.ID && sledgehammer == toolUser.CurrentTool)
                     return true;
             }
             return false;
