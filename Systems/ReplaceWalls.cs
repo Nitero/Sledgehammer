@@ -1,5 +1,7 @@
 ﻿using HarmonyLib;
 using Kitchen;
+using Kitchen.Layouts;
+using KitchenLib.Utils;
 using KitchenMods;
 using Unity.Collections;
 using Unity.Entities;
@@ -78,8 +80,17 @@ namespace KitchenSledgehammer
                 if (child.name != "Short Wall Section(Clone)" || !child.gameObject.activeSelf)
                     continue;
 
+                //TODO: make this actually be what side the player made the hatch from
+                Vector3 from = new Vector3(Mathf.Floor(child.position.x), Mathf.Floor(child.position.y), Mathf.Floor(child.position.z));
+                Vector3 to = new Vector3(Mathf.Ceil(child.position.x), Mathf.Ceil(child.position.y), Mathf.Ceil(child.position.z));
+
+                if (!LayoutHelpers.IsInside(GetTile(from).Type))
+                    continue;
+                if (!LayoutHelpers.IsInside(GetTile(to).Type))
+                    continue;
+
                 child.gameObject.SetActive(false);
-                
+
                 if (alreadyReplacedWalls)
                     continue;
 
@@ -88,10 +99,8 @@ namespace KitchenSledgehammer
                 EntityManager.AddComponentData(entity, new CPosition(child.position, child.rotation));
                 EntityManager.AddComponentData(entity, new CFixedRotation());
 
-                //TODO: make this actually be what side the player made the wall from
-                Vector3 from = new Vector3(Mathf.Floor(child.position.x), Mathf.Floor(child.position.y), Mathf.Floor(child.position.z));
-                Vector3 to = new Vector3(Mathf.Ceil(child.position.x), Mathf.Ceil(child.position.y), Mathf.Ceil(child.position.z));
-                EntityManager.AddComponentData(entity, new CWallReplaced(child.position, from, to, false));
+                int wallMaterial = MaterialUtils.GetExistingMaterial("Wall Main").GetInstanceID(); //TODO: get the actual materials of walls when mod was added mid run
+                EntityManager.AddComponentData(entity, new CWallReplaced(child.position, from, to, GetRoom(from), GetRoom(to), wallMaterial, wallMaterial, false));
             }
         }
 

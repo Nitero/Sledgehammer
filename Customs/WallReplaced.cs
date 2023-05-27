@@ -55,18 +55,16 @@ namespace KitchenSledgehammer
             protected override void OnUpdate()
             {
                 using var views = wallReplacedViewQuery.ToComponentDataArray<CLinkedView>(Allocator.Temp);
-                using var duration = wallReplacedViewQuery.ToComponentDataArray<CTakesDuration>(Allocator.Temp);
-
                 using var walls = wallReplacedViewQuery.ToComponentDataArray<CWallReplaced>(Allocator.Temp);
-                bool isDay = HasSingleton<SIsDayTime>();
 
                 for (int i = 0; i < views.Length; i++)
                 {
-                    var deconstruct = walls[i];
-                    var dur = duration[i];
+                    var wall = walls[i];
                     SendUpdate(views[i], new WallReplacedView.ViewData
                     {
-                        IsHammered = deconstruct.HasBeenHammered,
+                        IsHammered = wall.HasBeenHammered,
+                        MaterialA = wall.MaterialA,
+                        MaterialB = wall.MaterialB,
                     });
                 }
             }
@@ -79,10 +77,14 @@ namespace KitchenSledgehammer
             {
                 [Key(0)]
                 public bool IsHammered;
+                [Key(1)]
+                public int MaterialA;
+                [Key(2)]
+                public int MaterialB;
 
                 public bool IsChangedFrom(ViewData check)
                 {
-                    return IsHammered != check.IsHammered;
+                    return IsHammered != check.IsHammered || MaterialA != check.MaterialA || MaterialB != check.MaterialB;
                 }
 
                 public IUpdatableObject GetRelevantSubview(IObjectView view)
@@ -91,14 +93,30 @@ namespace KitchenSledgehammer
                 }
             }
 
+            public ViewData Data;
             public GameObject Hatch;
             public GameObject Wall;
-            public ProgressView progressView;
 
             protected override void UpdateData(ViewData data)
             {
+                if (!data.IsChangedFrom(Data))
+                    return;
+                Data = data;
+
                 Hatch.SetActive(data.IsHammered);
                 Wall.SetActive(!data.IsHammered);
+
+
+                string materialA = Mod.MaterialIdsToNames[data.MaterialA];
+                string materialB = Mod.MaterialIdsToNames[data.MaterialB];
+
+                Hatch.ApplyMaterialToChild("Cube", materialA, "BaseDefault", materialB);
+                Hatch.ApplyMaterialToChild("Cube.001", materialA, materialB);
+
+                Wall.GetChild("wallsection").ApplyMaterialToChild("Cube", materialA, "BaseDefault", materialB);
+                Wall.GetChild("wallsection").ApplyMaterialToChild("Cube.001", materialA, materialB);
+                //TODO: if still lags with big room save the mesh renderer
+                //TODO: is OnRegister material still needed?
             }
         }
 
@@ -114,7 +132,7 @@ namespace KitchenSledgehammer
             hatch.ApplyMaterialToChild("Cube.002", "Wood - Default");
 
             var wall = Prefab.GetChild("WallHammerable");
-            wall.GetChild("wallsection").ApplyMaterialToChild("Cube", "Wall Main", "BaseDefault", "Wall Main");//TODO: there are wrong(?)
+            wall.GetChild("wallsection").ApplyMaterialToChild("Cube", "Wall Main", "BaseDefault", "Wall Main");//TODO: these are wrong(?)
             wall.GetChild("wallsection").ApplyMaterialToChild("Cube.001", "Wall Main", "Wall Main");
             wall.GetChild("wallsection").ApplyMaterialToChild("Cube.002", "Wood - Default");
 

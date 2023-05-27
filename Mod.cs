@@ -1,7 +1,10 @@
 ﻿using Kitchen;
+using KitchenData;
 using KitchenLib;
 using KitchenLib.Event;
+using KitchenLib.Utils;
 using KitchenMods;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -21,6 +24,12 @@ namespace KitchenSledgehammer
         // Game version this mod is designed for in semver
         // e.g. ">=1.1.1" current and all future
         // e.g. ">=1.1.1 <=1.2.3" for all from/until
+
+        private static Dictionary<int, int> wallpaperIdsToMaterialIds = new Dictionary<int, int>();
+        public static Dictionary<int, int> WallpaperIdsToMaterialIds => wallpaperIdsToMaterialIds;
+
+        private static Dictionary<int, string> materialIdsToNames = new Dictionary<int, string>();
+        public static Dictionary<int, string> MaterialIdsToNames => materialIdsToNames;
 
         // Boolean constant whose value depends on whether you built with DEBUG or RELEASE mode, useful for testing
 #if DEBUG
@@ -69,6 +78,19 @@ namespace KitchenSledgehammer
             // Perform actions when game data is built
             Events.BuildGameDataEvent += delegate (object s, BuildGameDataEventArgs args)
             {
+            };
+
+            Events.BuildGameDataPostViewInitEvent += (s, args) =>
+            {
+                foreach (Decor decor in args.gamedata.Get<Decor>().Where(x => x.IsAvailable))
+                {
+                    if (decor.Type != LayoutMaterialType.Wallpaper)
+                        continue;
+                    string decorName = $"{decor.ID}";
+                    wallpaperIdsToMaterialIds.Add(decor.ID, decor.Material.GetInstanceID());
+                    materialIdsToNames.Add(decor.Material.GetInstanceID(), decor.Material.name);
+                }
+                materialIdsToNames.Add(MaterialUtils.GetExistingMaterial("Wall Main").GetInstanceID(), "Wall Main");
             };
         }
 
