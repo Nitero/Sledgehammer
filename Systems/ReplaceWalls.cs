@@ -81,8 +81,8 @@ namespace KitchenSledgehammer
                     continue;
 
                 //TODO: make this actually be what side the player made the hatch from
-                Vector3 from = new Vector3(Mathf.Floor(child.position.x), Mathf.Floor(child.position.y), Mathf.Floor(child.position.z));
-                Vector3 to = new Vector3(Mathf.Ceil(child.position.x), Mathf.Ceil(child.position.y), Mathf.Ceil(child.position.z));
+                Vector3 from = new Vector3(Mathf.Floor(child.position.x), 0, Mathf.Floor(child.position.z));
+                Vector3 to = new Vector3(Mathf.Ceil(child.position.x), 0, Mathf.Ceil(child.position.z));
 
                 if (!LayoutHelpers.IsInside(GetTile(from).Type))
                     continue;
@@ -93,14 +93,42 @@ namespace KitchenSledgehammer
 
                 if (alreadyReplacedWalls)
                     continue;
+                
+                
+                int wallMaterial = MaterialUtils.GetExistingMaterial("Wall Main").GetInstanceID(); //TODO: get the actual materials of walls when mod was added mid run
+                bool isHorizontal = Mathf.Approximately(from.z, to.z);
+
+                Reachability reachabilitySideA = default(Reachability);
+                Reachability reachabilitySideB = default(Reachability);
+                if(isHorizontal)
+                {
+                    int direction = (int)Mathf.Sign(to.x - from.x);
+                    reachabilitySideA[direction, 1] = true;//useless?
+                    reachabilitySideA[direction, 0] = true;
+                    reachabilitySideA[direction,-1] = true;//useless?
+
+                    reachabilitySideB[direction * -1, 1] = true;//useless?
+                    reachabilitySideB[direction * -1, 0] = true;
+                    reachabilitySideB[direction * -1,-1] = true;//useless?
+                }
+                else
+                {
+                    int direction = (int)Mathf.Sign(to.z - from.z);
+                    reachabilitySideA[ 1, direction] = true;//useless?
+                    reachabilitySideA[ 0, direction] = true;
+                    reachabilitySideA[-1, direction] = true;//useless?
+
+                    reachabilitySideB[ 1, direction * -1] = true;//useless?
+                    reachabilitySideB[ 0, direction * -1] = true;
+                    reachabilitySideB[-1, direction * -1] = true;//useless?
+                }
+                //TODO: diagonals dont work... do they need to start from the adjacent tile too, not just A/B? nvm didnt seem to work either... why works at night?
 
                 Entity entity = EntityManager.CreateEntity();
                 EntityManager.AddComponentData(entity, new CCreateAppliance{ ID = Refs.WallReplaced.ID });
                 EntityManager.AddComponentData(entity, new CPosition(child.position, child.rotation));
                 EntityManager.AddComponentData(entity, new CFixedRotation());
-
-                int wallMaterial = MaterialUtils.GetExistingMaterial("Wall Main").GetInstanceID(); //TODO: get the actual materials of walls when mod was added mid run
-                EntityManager.AddComponentData(entity, new CWallReplaced(child.position, from, to, GetRoom(from), GetRoom(to), wallMaterial, wallMaterial, false));
+                EntityManager.AddComponentData(entity, new CWallReplaced(child.position, from, to, GetRoom(from), GetRoom(to), reachabilitySideA, reachabilitySideB, wallMaterial, wallMaterial, false));
             }
         }
 
@@ -113,74 +141,76 @@ namespace KitchenSledgehammer
             EntityManager.SetComponentData(replacedWall, cReplacedWall);
         }
 
-        public bool IsReplacedWallHammeredBetween(Vector3 from, Vector3 to)
+        public bool CanReach(Vector3 from, Vector3 to)
         {
-            from = new Vector3(Mathf.Round(from.x), 0, Mathf.Round(from.z));
-            to = new Vector3(Mathf.Round(to.x), 0, Mathf.Round(to.z));
-
             using NativeArray<Entity> replacedWalls = replacedWallQuery.ToEntityArray(Allocator.TempJob);
+            if (CanReachNonHammeredWall(from, to, replacedWalls))
+                return true;
+
+            from = from.Rounded();
+            to = to.Rounded();
+
+            CLayoutRoomTile tileFrom = GetTile(from);
+            CLayoutRoomTile tileTo = GetTile(to);
+
+            if (tileFrom.RoomID == tileTo.RoomID)
+                return false;
+
+            return CanReachOverHammeredWall(from, to, replacedWalls);
+        }
+
+        private bool CanReachNonHammeredWall(Vector3 from, Vector3 to, NativeArray<Entity> replacedWalls)
+        {
             foreach (Entity replacedWall in replacedWalls)
             {
-                if (!EntityManager.RequireComponent<CWallReplaced>(replacedWall, out CWallReplaced cReplacedWall))
+                if (!EntityManager.RequireComponent<CWallReplaced>(replacedWall, out CWallReplaced wallHammered))
                     continue;
 
-                if (!cReplacedWall.HasBeenHammered)
+                if (wallHammered.HasBeenHammered)
                     continue;
 
-                var sideA = cReplacedWall.SideA;
-                var sideB = cReplacedWall.SideB;
-
-                // Check if the two positions are in the same row or column
-                if (Mathf.Approximately(from.x, to.x))
-                {
-                    // Same column, check if the wall is between the two positions horizontally
-                    if ((Mathf.Approximately(sideA.x, from.x) && Mathf.Approximately(sideB.x, to.x))
-                    || (Mathf.Approximately(sideA.x, to.x) && Mathf.Approximately(sideB.x, from.x)))
-                    {
-                        if (Mathf.Min(from.z, to.z) <= sideA.z && sideA.z <= Mathf.Max(from.z, to.z))
-                            return true;
-                    }
-                }
-                else if (Mathf.Approximately(from.z, to.z))
-                {
-                    // Same row, check if the wall is between the two positions vertically
-                    if ((Mathf.Approximately(sideA.z, from.z) && Mathf.Approximately(sideB.z, to.z))
-                    || (Mathf.Approximately(sideA.z, to.z) && Mathf.Approximately(sideB.z, from.z)))
-                    {
-                        if (Mathf.Min(from.x, to.x) <= sideA.x && sideA.x <= Mathf.Max(from.x, to.x))
-                            return true;
-                    }
-                }
-                else
-                {
-                    // Diagonal match, check if the wall is between the two positions diagonally
-                    if ((Mathf.Approximately(sideA.x, from.x) && Mathf.Approximately(sideB.z, to.z))
-                    || (Mathf.Approximately(sideA.x, to.x) && Mathf.Approximately(sideB.z, from.z)))
-                    {
-                        if (Mathf.Min(from.z, to.z) <= sideA.z && sideA.z <= Mathf.Max(from.z, to.z))
-                            return true;
-                    }
-                    else if ((Mathf.Approximately(sideA.z, from.z) && Mathf.Approximately(sideB.x, to.x))
-                    || (Mathf.Approximately(sideA.z, to.z) && Mathf.Approximately(sideB.x, from.x)))
-                    {
-                        if (Mathf.Min(from.x, to.x) <= sideA.x && sideA.x <= Mathf.Max(from.x, to.x))
-                            return true;
-                    }
-                }
+                if (Vector3.Distance(to, wallHammered.WallPosition) < 0.5f)//TODO: find a better solution?
+                    return true;
             }
+            return false;
+        }
 
+        private bool CanReachOverHammeredWall(Vector3 from, Vector3 to, NativeArray<Entity> replacedWalls)
+        {
+            Vector3 direction = to - from;
+            foreach (Entity replacedWall in replacedWalls)
+            {
+                if (!EntityManager.RequireComponent<CWallReplaced>(replacedWall, out CWallReplaced wallHammered))
+                    continue;
+
+                if (!wallHammered.HasBeenHammered)
+                    continue;
+
+                if (CanReachOverFromSide(from, wallHammered.SideA, wallHammered.ReachabilitySideA, direction))
+                    return true;
+                if (CanReachOverFromSide(from, wallHammered.SideB, wallHammered.ReachabilitySideB, direction))
+                    return true;
+            }
+            return false;
+        }
+
+        private bool CanReachOverFromSide(Vector3 from, Vector3 side, Reachability wallSideReachability, Vector3 direction)
+        {
+            bool fromIsSide = Mathf.Approximately(from.x, side.x) && Mathf.Approximately(from.z, side.z);
+            if (fromIsSide && wallSideReachability.GetDirectional(direction.x, direction.z))
+                return true;
             return false;
         }
     }
 
     [HarmonyPatch]
-    public static class CanReachOverHammeredWallPatch
+    public static class CanReachPatch
     {
         [HarmonyPatch(typeof(GenericSystemBase), "CanReach")]
         [HarmonyPrefix]
         static bool CanReach_Prefix(ref bool __result, Vector3 from, Vector3 to, bool do_not_swap = false)
         {
-            if (ReplaceWalls.Instance.IsReplacedWallHammeredBetween(from, to))
+            if (ReplaceWalls.Instance.CanReach(from, to))
             {
                 __result = true;
                 return false;

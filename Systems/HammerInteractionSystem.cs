@@ -64,6 +64,7 @@ namespace KitchenSledgehammer
                 Debug.Log("Took: " + duration.Remaining);
 
                 EntityManager.AddComponent<CIsInactive>(data.Target);
+
                 wallReplaced.HasBeenHammered = true;
                 EntityManager.SetComponentData(data.Target, wallReplaced);
 
