@@ -7,6 +7,7 @@ using KitchenMods;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using TMPro;
 using UnityEngine;
 
 namespace KitchenSledgehammer
@@ -59,6 +60,16 @@ namespace KitchenSledgehammer
             LogInfo("Done loading game data.");
         }
 
+        private void AddProcessIcons()
+        {
+            Bundle.LoadAllAssets<Texture2D>();
+            Bundle.LoadAllAssets<Sprite>();
+
+            var spriteAsset = Bundle.LoadAsset<TMP_SpriteAsset>("hammerIcon");
+            TMP_Settings.defaultSpriteAsset.fallbackSpriteAssets.Add(spriteAsset);
+            spriteAsset.material = Object.Instantiate(TMP_Settings.defaultSpriteAsset.material);
+            spriteAsset.material.mainTexture = Bundle.LoadAsset<Texture2D>("hammerIconSprite");
+        }
 
         protected override void OnPostActivate(KitchenMods.Mod mod)
         {
@@ -74,6 +85,9 @@ namespace KitchenSledgehammer
 
             // Register custom GDOs
             AddGameData();
+
+            // Load process icons
+            AddProcessIcons();
 
             // Perform actions when game data is built
             Events.BuildGameDataEvent += delegate (object s, BuildGameDataEventArgs args)

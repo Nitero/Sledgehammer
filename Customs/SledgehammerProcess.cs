@@ -18,15 +18,15 @@ namespace KitchenSledgehammer
 
 
         // The localization information for this process. This must be set for at least one language. 
-        //public override LocalisationObject<ProcessInfo> Info
-        //{
-        //    get
-        //    {
-        //        var info = new LocalisationObject<ProcessInfo>();
+        public override LocalisationObject<ProcessInfo> Info
+        {
+            get
+            {
+                var info = new LocalisationObject<ProcessInfo>();
 
-        //        info.Add(Locale.English, LocalisationUtils.CreateProcessInfo("Hammer", "<sprite name=\"cogpngwhitescaled\">"));
-        //        return info;
-        //    }
-        //}
+                info.Add(Locale.English, LocalisationUtils.CreateProcessInfo("Hammer", "<sprite name=\"hammerIconSprite\">"));
+                return info;
+            }
+        }
     }
 }

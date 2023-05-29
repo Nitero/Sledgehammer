@@ -37,13 +37,15 @@ namespace KitchenSledgehammer
         {
             var parent = Prefab.GetChild("GameObject");
             var inkJar = parent.GetChild("Ink Jar");
+            var sledgeHammer = parent.GetChild("Sledgehammer");
 
             Helper.SetupThinCounter(Prefab);
             Helper.SetupThinCounterLimitedItem(Prefab, Helper.GetPrefab("Sledgehammer"), false);
 
-            parent.ApplyMaterialToChild("Sledgehammer/Cube.003", "Plastic - White", "Plastic - Grey");
             inkJar.ApplyMaterialToChild("Jar", "Oven Glass");
             inkJar.ApplyMaterialToChild("Ink", "Piano Black");
+
+            Sledgehammer.ApplyMaterial(sledgeHammer);
         }
     }
 }

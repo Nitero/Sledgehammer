@@ -11,8 +11,10 @@ namespace KitchenSledgehammer
     {
         private CTakesDuration duration;
         private CWallReplaced wallReplaced;
+        private CItem sledgeHammer;
         private CToolUser toolUser;
         private EntityQuery sledgehammerQuery;
+        private EntityQuery sledgehammerProviderQuery;
         protected override bool RequireHold => true;
         protected override bool RequirePress => false;
 
@@ -20,6 +22,7 @@ namespace KitchenSledgehammer
         {
             base.Initialise();
             sledgehammerQuery = GetEntityQuery(new QueryHelper().All(typeof(CItem)));
+            sledgehammerProviderQuery = GetEntityQuery(new QueryHelper().All(typeof(CItemProvider)));
         }
 
         protected override bool IsPossible(ref InteractionData data)
@@ -49,15 +52,20 @@ namespace KitchenSledgehammer
                 return;
             if (!Require(data.Target, out duration))
                 return;
+            if (!Require(data.Interactor, out toolUser))
+                return;
+            if (!Require(toolUser.CurrentTool, out sledgeHammer))
+                return;
 
             wallReplaced.HammeringWasAttemptedToday = true;
             EntityManager.SetComponentData(data.Target, wallReplaced);
 
             duration.Manual = true;
             duration.IsLocked = false;
-            duration.Remaining -= 0.1f * 1f;
+            duration.Remaining -= 0.01f * 1f;
             duration.CurrentChange = 1f;
             EntityManager.SetComponentData(data.Target, duration);
+
 
             if (duration.Remaining <= 0f && duration.Active)
             {
@@ -71,6 +79,19 @@ namespace KitchenSledgehammer
                 duration.IsLocked = true;
                 duration.Active = false;
                 EntityManager.SetComponentData(data.Target, wallReplaced);
+
+
+                using NativeArray<Entity> providerEntities = sledgehammerProviderQuery.ToEntityArray(Allocator.Temp);
+                using NativeArray<CItemProvider> providers = sledgehammerProviderQuery.ToComponentDataArray<CItemProvider>(Allocator.Temp);
+                for (int i = 0; i < providers.Length; i++)
+                {
+                    Entity entity = providerEntities[i];
+                    CItemProvider provider = providers[i];
+
+                    if(provider.ProvidedItem == sledgeHammer)
+                        EntityManager.DestroyEntity(entity);
+                }
+                EntityManager.DestroyEntity(toolUser.CurrentTool);
             }
         }
     }

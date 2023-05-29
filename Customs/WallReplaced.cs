@@ -1,4 +1,5 @@
 ﻿using Kitchen;
+using Kitchen.Components;
 using KitchenData;
 using KitchenLib.Customs;
 using KitchenLib.Utils;
@@ -54,17 +55,23 @@ namespace KitchenSledgehammer
             }
             protected override void OnUpdate()
             {
+                using var entities = wallReplacedViewQuery.ToEntityArray(Allocator.Temp);
                 using var views = wallReplacedViewQuery.ToComponentDataArray<CLinkedView>(Allocator.Temp);
                 using var walls = wallReplacedViewQuery.ToComponentDataArray<CWallReplaced>(Allocator.Temp);
+                using var durations = wallReplacedViewQuery.ToComponentDataArray<CTakesDuration>(Allocator.Temp);
 
                 for (int i = 0; i < views.Length; i++)
                 {
+                    var entity = entities[i];
                     var wall = walls[i];
+                    var duration = durations[i];
                     SendUpdate(views[i], new WallReplacedView.ViewData
                     {
-                        IsHammered = wall.HasBeenHammered,
+                        HasBeenHammered = wall.HasBeenHammered,
+                        HammeringWasAttemptedToday = wall.HammeringWasAttemptedToday,
                         MaterialA = wall.MaterialA,
                         MaterialB = wall.MaterialB,
+                        IsBeingHammered = duration.CurrentChange > 0,
                     });
                 }
             }
@@ -76,15 +83,19 @@ namespace KitchenSledgehammer
             public struct ViewData : ISpecificViewData, IViewData, IViewResponseData, IViewData.ICheckForChanges<ViewData>
             {
                 [Key(0)]
-                public bool IsHammered;
+                public bool HasBeenHammered;
                 [Key(1)]
-                public int MaterialA;
+                public bool HammeringWasAttemptedToday;
                 [Key(2)]
+                public int MaterialA;
+                [Key(3)]
                 public int MaterialB;
+                [Key(4)]
+                public bool IsBeingHammered;
 
                 public bool IsChangedFrom(ViewData check)
                 {
-                    return IsHammered != check.IsHammered || MaterialA != check.MaterialA || MaterialB != check.MaterialB;
+                    return HasBeenHammered != check.HasBeenHammered || HammeringWasAttemptedToday != check.HammeringWasAttemptedToday || MaterialA != check.MaterialA || MaterialB != check.MaterialB || IsBeingHammered != check.IsBeingHammered;
                 }
 
                 public IUpdatableObject GetRelevantSubview(IObjectView view)
@@ -93,18 +104,37 @@ namespace KitchenSledgehammer
                 }
             }
 
-            public ViewData Data;
+            public ViewData LastData;
             public GameObject Hatch;
             public GameObject Wall;
+            public SoundSource SourceHammerProgress;
+            public SoundSource SourceHammerFinished;
+            public bool IsBeingHammered;
+
+            private void Update()
+            {
+                if (IsBeingHammered != SourceHammerProgress.IsPlaying)
+                {
+                    if (IsBeingHammered)
+                        SourceHammerProgress.Play();
+                    else
+                        SourceHammerProgress.Stop();
+                }
+            }
 
             protected override void UpdateData(ViewData data)
             {
-                if (!data.IsChangedFrom(Data))
+                if (!data.IsChangedFrom(LastData))
                     return;
-                Data = data;
 
-                Hatch.SetActive(data.IsHammered);
-                Wall.SetActive(!data.IsHammered);
+                IsBeingHammered = data.IsBeingHammered;
+
+                if (data.HasBeenHammered && !LastData.HasBeenHammered && !SourceHammerFinished.IsPlaying)
+                    SourceHammerFinished.Play();
+
+
+                Hatch.SetActive(data.HasBeenHammered);
+                Wall.SetActive(!data.HasBeenHammered);
 
 
                 string materialA = Mod.MaterialIdsToNames[data.MaterialA];
@@ -117,6 +147,8 @@ namespace KitchenSledgehammer
                 Wall.GetChild("wallsection").ApplyMaterialToChild("Cube.001", materialA, materialB);
                 //TODO: if still lags with big room save the mesh renderer
                 //TODO: is OnRegister material still needed?
+
+                LastData = data;
             }
         }
 
@@ -136,9 +168,30 @@ namespace KitchenSledgehammer
             wall.GetChild("wallsection").ApplyMaterialToChild("Cube.001", "Wall Main", "Wall Main");
             wall.GetChild("wallsection").ApplyMaterialToChild("Cube.002", "Wood - Default");
 
+            wall.gameObject.transform.position += Vector3.down * 0.01f;//to prevent z fighting with outter walls eg in city
+
             WallReplacedView hammeredView = Prefab.AddComponent<WallReplacedView>();
             hammeredView.Wall = wall;
             hammeredView.Hatch = hatch;
+
+
+            GameObject gameObject = new GameObject("SoundSourceWallBeingHammered");
+            SoundSource sourceHammerProgress = gameObject.AddComponent<SoundSource>();
+            gameObject.transform.ParentTo(Prefab.transform);
+            sourceHammerProgress.Configure(SoundCategory.Effects, Mod.Bundle.LoadAsset<AudioClip>("hammerProgress4"));
+            sourceHammerProgress.ShouldLoop = false;//TODO: why doesnt it work with looping and transition time?
+            sourceHammerProgress.TransitionTime = 0f;
+            sourceHammerProgress.VolumeMultiplier = 0.1f;
+            hammeredView.SourceHammerProgress = sourceHammerProgress;
+
+            GameObject gameObject2 = new GameObject("SoundSourceWallFinishHammering");
+            SoundSource sourceHammerFinished = gameObject2.AddComponent<SoundSource>();
+            gameObject2.transform.ParentTo(Prefab.transform);
+            sourceHammerFinished.Configure(SoundCategory.Effects, Mod.Bundle.LoadAsset<AudioClip>("hammerFinished"));
+            sourceHammerFinished.ShouldLoop = false;
+            sourceHammerFinished.TransitionTime = 0f;
+            sourceHammerFinished.VolumeMultiplier = 0.1f;
+            hammeredView.SourceHammerFinished = sourceHammerFinished;
         }
     }
 }

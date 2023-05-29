@@ -144,7 +144,7 @@ namespace KitchenSledgehammer
         public bool CanReach(Vector3 from, Vector3 to)
         {
             using NativeArray<Entity> replacedWalls = replacedWallQuery.ToEntityArray(Allocator.TempJob);
-            if (CanReachNonHammeredWall(from, to, replacedWalls))
+            if (HasSingleton<SIsDayTime>() && CanReachNonHammeredWall(from, to, replacedWalls))
                 return true;
 
             from = from.Rounded();
