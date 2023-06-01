@@ -36,14 +36,13 @@ namespace KitchenSledgehammer
         public override void OnRegister(GameDataObject gameDataObject)
         {
             var parent = Prefab.GetChild("GameObject");
-            var inkJar = parent.GetChild("Ink Jar");
+            var thinBlock = Prefab.GetChild("Thin Block");
             var sledgeHammer = parent.GetChild("Sledgehammer");
 
             Helper.SetupThinCounter(Prefab);
             Helper.SetupThinCounterLimitedItem(Prefab, Helper.GetPrefab("Sledgehammer"), false);
 
-            inkJar.ApplyMaterialToChild("Jar", "Oven Glass");
-            inkJar.ApplyMaterialToChild("Ink", "Piano Black");
+            thinBlock.ApplyMaterialToChild("SledgehammerStand", "Wood - Default");
 
             Sledgehammer.ApplyMaterial(sledgeHammer);
         }

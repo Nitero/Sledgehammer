@@ -72,6 +72,8 @@ namespace KitchenSledgehammer
                 Debug.Log("Took: " + duration.Remaining);
 
                 EntityManager.AddComponent<CIsInactive>(data.Target);
+                //EntityManager.RemoveComponent<CIsInteractive>(data.Target);
+                //-> need to use CIsInactive instead of CIsInteractive so that its not highlighted afterwards when looking at other appliances
 
                 wallReplaced.HasBeenHammered = true;
                 EntityManager.SetComponentData(data.Target, wallReplaced);
@@ -79,7 +81,6 @@ namespace KitchenSledgehammer
                 duration.IsLocked = true;
                 duration.Active = false;
                 EntityManager.SetComponentData(data.Target, wallReplaced);
-
 
                 using NativeArray<Entity> providerEntities = sledgehammerProviderQuery.ToEntityArray(Allocator.Temp);
                 using NativeArray<CItemProvider> providers = sledgehammerProviderQuery.ToComponentDataArray<CItemProvider>(Allocator.Temp);

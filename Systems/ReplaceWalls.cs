@@ -103,26 +103,26 @@ namespace KitchenSledgehammer
                 if(isHorizontal)
                 {
                     int direction = (int)Mathf.Sign(to.x - from.x);
-                    reachabilitySideA[direction, 1] = true;//useless?
+                    reachabilitySideA[direction, 1] = true;
                     reachabilitySideA[direction, 0] = true;
-                    reachabilitySideA[direction,-1] = true;//useless?
+                    reachabilitySideA[direction,-1] = true;
 
-                    reachabilitySideB[direction * -1, 1] = true;//useless?
+                    reachabilitySideB[direction * -1, 1] = true;
                     reachabilitySideB[direction * -1, 0] = true;
-                    reachabilitySideB[direction * -1,-1] = true;//useless?
+                    reachabilitySideB[direction * -1,-1] = true;
                 }
                 else
                 {
                     int direction = (int)Mathf.Sign(to.z - from.z);
-                    reachabilitySideA[ 1, direction] = true;//useless?
+                    reachabilitySideA[ 1, direction] = true;
                     reachabilitySideA[ 0, direction] = true;
-                    reachabilitySideA[-1, direction] = true;//useless?
+                    reachabilitySideA[-1, direction] = true;
 
-                    reachabilitySideB[ 1, direction * -1] = true;//useless?
+                    reachabilitySideB[ 1, direction * -1] = true;
                     reachabilitySideB[ 0, direction * -1] = true;
-                    reachabilitySideB[-1, direction * -1] = true;//useless?
+                    reachabilitySideB[-1, direction * -1] = true;
                 }
-                //TODO: diagonals dont work... do they need to start from the adjacent tile too, not just A/B? nvm didnt seem to work either... why works at night?
+                //TODO: should set the rachability on the layout tiles directly? how? check LayoutExtensions
 
                 Entity entity = EntityManager.CreateEntity();
                 EntityManager.AddComponentData(entity, new CCreateAppliance{ ID = Refs.WallReplaced.ID });
@@ -144,7 +144,8 @@ namespace KitchenSledgehammer
         public bool CanReach(Vector3 from, Vector3 to)
         {
             using NativeArray<Entity> replacedWalls = replacedWallQuery.ToEntityArray(Allocator.TempJob);
-            if (HasSingleton<SIsDayTime>() && CanReachNonHammeredWall(from, to, replacedWalls))
+
+            if (HasSingleton<SIsDayTime>() && CanReachNonHammeredWall(from, to, replacedWalls))//TODO: only if using hammer?
                 return true;
 
             from = from.Rounded();

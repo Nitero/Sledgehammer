@@ -45,11 +45,7 @@ namespace KitchenSledgehammer
 
         public static void ApplyMaterial(GameObject sledgehammer)
         {
-            sledgehammer.ApplyMaterialToChild("Handle", "Wood");
-            //Prefab.ApplyMaterialToChild("Head", "Bin Bag");
-
-            Material sledgehammerHead = MaterialHelper.CreateFlat("SledgehammerHead", new Color(0.2f, 0.27f, 0.32f, 1f));
-            sledgehammer.ApplyMaterialToChild("Head", new Material[] { sledgehammerHead });
+            sledgehammer.ApplyMaterialToChild("Hammer", "Metal", "Wood");
         }
     }
 }

@@ -21,7 +21,7 @@ namespace KitchenSledgehammer
         public override ShoppingTags ShoppingTags => ShoppingTags.None;
 
         public override bool IsNonInteractive => false;
-        public override bool ForceHighInteractionPriority => true;
+        public override bool ForceHighInteractionPriority => false;
         public override OccupancyLayer Layer => OccupancyLayer.Wall;
 
         public override List<(Locale, ApplianceInfo)> InfoList => new()
@@ -40,6 +40,7 @@ namespace KitchenSledgehammer
         {
             new CFireImmune(),
             new CImmovable(),
+            //new CIsInteractive(){ IsLowPriority = true },
             
             KitchenPropertiesUtils.GetCDisplayDuration(false, Refs.SledgehammerProcess.ID, false),
             KitchenPropertiesUtils.GetCTakesDuration(10f, 10f, false, false, false, DurationToolType.None, InteractionMode.Appliances, false, true, false, false, 0),
