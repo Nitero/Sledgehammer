@@ -37,7 +37,7 @@ namespace KitchenSledgehammer
             using NativeArray<Entity> sledgehammers = sledgehammerQuery.ToEntityArray(Allocator.TempJob);
             foreach (var sledgehammer in sledgehammers)
             {
-                if (!EntityManager.RequireComponent<CItem>(sledgehammer, out CItem item))
+                if (!EntityManager.RequireComponent(sledgehammer, out CItem item))
                     continue;
 
                 if (item.ID == Refs.Sledgehammer.ID && sledgehammer == toolUser.CurrentTool)
@@ -69,8 +69,6 @@ namespace KitchenSledgehammer
 
             if (duration.Remaining <= 0f && duration.Active)
             {
-                Debug.Log("Took: " + duration.Remaining);
-
                 EntityManager.AddComponent<CIsInactive>(data.Target);
                 //EntityManager.RemoveComponent<CIsInteractive>(data.Target);
                 //-> need to use CIsInactive instead of CIsInteractive so that its not highlighted afterwards when looking at other appliances

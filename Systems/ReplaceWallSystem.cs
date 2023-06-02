@@ -13,7 +13,7 @@ namespace KitchenSledgehammer
     {
         protected override void OnUpdate()
         {
-            ReplaceWalls.Instance?.Reset(); //TODO: only in practise
+            ReplaceWallSystem.Instance?.Reset(); //TODO: only in practise
         }
     }
 
@@ -21,16 +21,16 @@ namespace KitchenSledgehammer
     {
         protected override void OnUpdate()
         {
-            ReplaceWalls.Instance?.Reset();
+            ReplaceWallSystem.Instance?.Reset();
         }
     }
 
     //[UpdateAfter(typeof(SLayout))]
     [UpdateAfter(typeof(SKitchenLayout))]
-    public class ReplaceWalls : NightSystem, IModSystem //TODO: why doesnt RestaurantInitialisationSystem work? or StartOfNightSystem?
+    public class ReplaceWallSystem : NightSystem, IModSystem //TODO: why doesnt RestaurantInitialisationSystem work? or StartOfNightSystem?
     {
-        private static ReplaceWalls _instance;
-        public static ReplaceWalls Instance => _instance;
+        private static ReplaceWallSystem _instance;
+        public static ReplaceWallSystem Instance => _instance;
 
         private EntityQuery replacedWallQuery;
 
@@ -62,12 +62,12 @@ namespace KitchenSledgehammer
             bool alreadyReplacedWalls = replacedWalls.Length > 0;
             foreach (Entity replacedWall in replacedWalls)
             {
-                if (EntityManager.RequireComponent<CWallReplaced>(replacedWall, out CWallReplaced cWallHasBeenReplaced))
+                if (EntityManager.RequireComponent(replacedWall, out CWallReplaced cWallHasBeenReplaced))
                 {
                     cWallHasBeenReplaced.HammeringWasAttemptedToday = false;
                     EntityManager.SetComponentData(replacedWall, cWallHasBeenReplaced);
                 }
-                if (EntityManager.RequireComponent<CTakesDuration>(replacedWall, out CTakesDuration cTakesDuration))
+                if (EntityManager.RequireComponent(replacedWall, out CTakesDuration cTakesDuration))
                 {
                     cTakesDuration.Manual = false;
                     EntityManager.SetComponentData(replacedWall, cTakesDuration);
@@ -130,93 +130,6 @@ namespace KitchenSledgehammer
                 EntityManager.AddComponentData(entity, new CFixedRotation());
                 EntityManager.AddComponentData(entity, new CWallReplaced(child.position, from, to, GetRoom(from), GetRoom(to), reachabilitySideA, reachabilitySideB, wallMaterial, wallMaterial, false));
             }
-        }
-
-        public void Hammered(Entity replacedWall)
-        {
-            if (!EntityManager.RequireComponent<CWallReplaced>(replacedWall, out CWallReplaced cReplacedWall))
-                return;
-
-            cReplacedWall.HasBeenHammered = true;
-            EntityManager.SetComponentData(replacedWall, cReplacedWall);
-        }
-
-        public bool CanReach(Vector3 from, Vector3 to)
-        {
-            using NativeArray<Entity> replacedWalls = replacedWallQuery.ToEntityArray(Allocator.TempJob);
-
-            if (HasSingleton<SIsDayTime>() && CanReachNonHammeredWall(from, to, replacedWalls))//TODO: only if using hammer?
-                return true;
-
-            from = from.Rounded();
-            to = to.Rounded();
-
-            CLayoutRoomTile tileFrom = GetTile(from);
-            CLayoutRoomTile tileTo = GetTile(to);
-
-            if (tileFrom.RoomID == tileTo.RoomID)
-                return false;
-
-            return CanReachOverHammeredWall(from, to, replacedWalls);
-        }
-
-        private bool CanReachNonHammeredWall(Vector3 from, Vector3 to, NativeArray<Entity> replacedWalls)
-        {
-            foreach (Entity replacedWall in replacedWalls)
-            {
-                if (!EntityManager.RequireComponent<CWallReplaced>(replacedWall, out CWallReplaced wallHammered))
-                    continue;
-
-                if (wallHammered.HasBeenHammered)
-                    continue;
-
-                if (Vector3.Distance(to, wallHammered.WallPosition) < 0.5f)//TODO: find a better solution?
-                    return true;
-            }
-            return false;
-        }
-
-        private bool CanReachOverHammeredWall(Vector3 from, Vector3 to, NativeArray<Entity> replacedWalls)
-        {
-            Vector3 direction = to - from;
-            foreach (Entity replacedWall in replacedWalls)
-            {
-                if (!EntityManager.RequireComponent<CWallReplaced>(replacedWall, out CWallReplaced wallHammered))
-                    continue;
-
-                if (!wallHammered.HasBeenHammered)
-                    continue;
-
-                if (CanReachOverFromSide(from, wallHammered.SideA, wallHammered.ReachabilitySideA, direction))
-                    return true;
-                if (CanReachOverFromSide(from, wallHammered.SideB, wallHammered.ReachabilitySideB, direction))
-                    return true;
-            }
-            return false;
-        }
-
-        private bool CanReachOverFromSide(Vector3 from, Vector3 side, Reachability wallSideReachability, Vector3 direction)
-        {
-            bool fromIsSide = Mathf.Approximately(from.x, side.x) && Mathf.Approximately(from.z, side.z);
-            if (fromIsSide && wallSideReachability.GetDirectional(direction.x, direction.z))
-                return true;
-            return false;
-        }
-    }
-
-    [HarmonyPatch]
-    public static class CanReachPatch
-    {
-        [HarmonyPatch(typeof(GenericSystemBase), "CanReach")]
-        [HarmonyPrefix]
-        static bool CanReach_Prefix(ref bool __result, Vector3 from, Vector3 to, bool do_not_swap = false)
-        {
-            if (ReplaceWalls.Instance.CanReach(from, to))
-            {
-                __result = true;
-                return false;
-            }
-            return true;//run original
         }
     }
 }

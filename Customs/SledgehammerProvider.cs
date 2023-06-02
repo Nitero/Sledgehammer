@@ -10,8 +10,8 @@ namespace KitchenSledgehammer
     {
         public override string UniqueNameID => "SledgehammerProvider";
         public override GameObject Prefab => Mod.Bundle.LoadAsset<GameObject>("SledgehammerProvider");
-        public override PriceTier PriceTier => PriceTier.VeryCheap;//TODO: ExtremelyExpensive
-        public override RarityTier RarityTier => RarityTier.Common;//TODO: Rare
+        public override PriceTier PriceTier => PriceTier.ExtremelyExpensive;
+        public override RarityTier RarityTier => RarityTier.Rare;
         public override bool IsPurchasable => true;
         //public override bool IsPurchasableAsUpgrade => true;
         public override ShoppingTags ShoppingTags => ShoppingTags.Misc;
@@ -23,7 +23,7 @@ namespace KitchenSledgehammer
                 new Appliance.Section
                 {
                     Title = "Blunt",
-                    Description = "Use this to tear down walls into hatches"
+                    Description = "Use this to tear down a wall into a hatch"
                 }
             }, new()))
         };

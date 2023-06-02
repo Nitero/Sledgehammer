@@ -31,7 +31,7 @@ namespace KitchenSledgehammer
                 new Appliance.Section
                 {
                     Title = "Provisional",
-                    Description = "You can reach and pass things over this like with a hatch"
+                    Description = "You can reach over this like with a regular hatch"
                 }
             }, new()))
         };
@@ -43,7 +43,7 @@ namespace KitchenSledgehammer
             //new CIsInteractive(){ IsLowPriority = true },
             
             KitchenPropertiesUtils.GetCDisplayDuration(false, Refs.SledgehammerProcess.ID, false),
-            KitchenPropertiesUtils.GetCTakesDuration(10f, 10f, false, false, false, DurationToolType.None, InteractionMode.Appliances, false, true, false, false, 0),
+            KitchenPropertiesUtils.GetCTakesDuration(30f, 30f, false, false, false, DurationToolType.None, InteractionMode.Appliances, false, true, false, false, 0),
         };
 
         public class WallReplacedViewSystem : ViewSystemBase
@@ -130,7 +130,7 @@ namespace KitchenSledgehammer
 
                 IsBeingHammered = data.IsBeingHammered;
 
-                if (data.HasBeenHammered && !LastData.HasBeenHammered && !SourceHammerFinished.IsPlaying)
+                if (data.HammeringWasAttemptedToday && data.HasBeenHammered && !LastData.HasBeenHammered && !SourceHammerFinished.IsPlaying)
                     SourceHammerFinished.Play();
 
 

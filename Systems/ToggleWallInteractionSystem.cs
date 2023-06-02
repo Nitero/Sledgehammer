@@ -88,7 +88,6 @@ namespace KitchenSledgehammer
                     EntityManager.RemoveComponent<CIsInteractive>(wallEntity);
                 //-> need to use CIsInteractive instead of CIsInactive so that actually cant select during night
             }
-            Debug.Log("DISABLED");
         }
     }
 }
