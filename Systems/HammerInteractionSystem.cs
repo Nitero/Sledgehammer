@@ -2,7 +2,6 @@
 using KitchenMods;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 namespace KitchenSledgehammer
 {
@@ -11,18 +10,16 @@ namespace KitchenSledgehammer
     {
         private CTakesDuration duration;
         private CWallReplaced wallReplaced;
-        private CItem sledgeHammer;
+        private CSledgehammer sledgeHammer;
         private CToolUser toolUser;
         private EntityQuery sledgehammerQuery;
-        private EntityQuery sledgehammerProviderQuery;
         protected override bool RequireHold => true;
         protected override bool RequirePress => false;
 
         protected override void Initialise()
         {
             base.Initialise();
-            sledgehammerQuery = GetEntityQuery(new QueryHelper().All(typeof(CItem)));
-            sledgehammerProviderQuery = GetEntityQuery(new QueryHelper().All(typeof(CItemProvider)));
+            sledgehammerQuery = GetEntityQuery(new QueryHelper().All(typeof(CSledgehammer)));
         }
 
         protected override bool IsPossible(ref InteractionData data)
@@ -37,10 +34,7 @@ namespace KitchenSledgehammer
             using NativeArray<Entity> sledgehammers = sledgehammerQuery.ToEntityArray(Allocator.TempJob);
             foreach (var sledgehammer in sledgehammers)
             {
-                if (!EntityManager.RequireComponent(sledgehammer, out CItem item))
-                    continue;
-
-                if (item.ID == Refs.Sledgehammer.ID && sledgehammer == toolUser.CurrentTool)
+                if (sledgehammer == toolUser.CurrentTool)
                     return true;
             }
             return false;
@@ -80,16 +74,6 @@ namespace KitchenSledgehammer
                 duration.Active = false;
                 EntityManager.SetComponentData(data.Target, wallReplaced);
 
-                using NativeArray<Entity> providerEntities = sledgehammerProviderQuery.ToEntityArray(Allocator.Temp);
-                using NativeArray<CItemProvider> providers = sledgehammerProviderQuery.ToComponentDataArray<CItemProvider>(Allocator.Temp);
-                for (int i = 0; i < providers.Length; i++)
-                {
-                    Entity entity = providerEntities[i];
-                    CItemProvider provider = providers[i];
-
-                    if(provider.ProvidedItem == sledgeHammer)
-                        EntityManager.DestroyEntity(entity);
-                }
                 EntityManager.DestroyEntity(toolUser.CurrentTool);
             }
         }

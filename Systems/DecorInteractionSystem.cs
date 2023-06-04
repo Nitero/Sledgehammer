@@ -47,7 +47,6 @@ namespace KitchenSledgehammer
                     }
                 }
             }
-            //TODO: why is it running every frame after a change? should I delete the CChangeDecorEvent entity?
         }
     }
 }

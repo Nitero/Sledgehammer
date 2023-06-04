@@ -14,14 +14,14 @@ namespace KitchenSledgehammer
         protected override void Initialise()
         {
             base.Initialise();
-            sledgehammerQuery = GetEntityQuery(new QueryHelper().All(typeof(CItem)));
+            sledgehammerQuery = GetEntityQuery(new QueryHelper().All(typeof(CSledgehammer)));
             replacedWallQuery = GetEntityQuery(typeof(CWallReplaced));
         }
 
         protected override void OnUpdate()
         {
             using NativeArray<Entity> hammerEntities = sledgehammerQuery.ToEntityArray(Allocator.Temp);
-            using NativeArray<CItem> sledgehammers = sledgehammerQuery.ToComponentDataArray<CItem>(Allocator.Temp);
+            using NativeArray<CSledgehammer> sledgehammers = sledgehammerQuery.ToComponentDataArray<CSledgehammer>(Allocator.Temp);
             using NativeArray<Entity> wallEntities = replacedWallQuery.ToEntityArray(Allocator.Temp);
             using NativeArray<CWallReplaced> walls = replacedWallQuery.ToComponentDataArray<CWallReplaced>(Allocator.Temp);
 
@@ -36,10 +36,7 @@ namespace KitchenSledgehammer
                 bool hammerInRange = false;
                 for (int j = 0; j < hammerEntities.Length; j++)
                 {
-                    CItem sledgehammer = sledgehammers[j];
-                    if (sledgehammer.ID != Refs.Sledgehammer.ID)
-                        continue;
-
+                    CSledgehammer sledgehammer = sledgehammers[j];
                     Entity hammer = hammerEntities[j];
                     if (!EntityManager.RequireComponent(hammer, out CToolInUse tool))
                         continue;

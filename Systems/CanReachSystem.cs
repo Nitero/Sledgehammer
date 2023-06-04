@@ -23,8 +23,7 @@ namespace KitchenSledgehammer
         }
 
     }
-    //[UpdateAfter(typeof(SLayout))]
-    [UpdateAfter(typeof(SKitchenLayout))]
+
     public class CanReachSystem : RestaurantSystem, IModSystem
     {
         private static CanReachSystem _instance;

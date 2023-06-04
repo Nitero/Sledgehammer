@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace KitchenSledgehammer
 {
-    //public struct CWallReplaced : IComponentData, IApplianceProperty, IAttachableProperty //is there a difference?
     public struct CWallReplaced : IModComponent
     {
         public Vector3 WallPosition;

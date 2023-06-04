@@ -25,8 +25,6 @@ namespace KitchenSledgehammer
         }
     }
 
-    //[UpdateAfter(typeof(SLayout))]
-    [UpdateAfter(typeof(SKitchenLayout))]
     public class ReplaceWallSystem : NightSystem, IModSystem //TODO: why doesnt RestaurantInitialisationSystem work? or StartOfNightSystem?
     {
         private static ReplaceWallSystem _instance;

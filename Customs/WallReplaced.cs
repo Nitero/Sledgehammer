@@ -43,7 +43,7 @@ namespace KitchenSledgehammer
             //new CIsInteractive(){ IsLowPriority = true },
             
             KitchenPropertiesUtils.GetCDisplayDuration(false, Refs.SledgehammerProcess.ID, false),
-            KitchenPropertiesUtils.GetCTakesDuration(30f, 30f, false, false, false, DurationToolType.None, InteractionMode.Appliances, false, true, false, false, 0),
+            KitchenPropertiesUtils.GetCTakesDuration(15f, 15f, false, false, false, DurationToolType.None, InteractionMode.Appliances, false, true, false, false, 0),
         };
 
         public class WallReplacedViewSystem : ViewSystemBase
@@ -146,7 +146,6 @@ namespace KitchenSledgehammer
 
                 Wall.GetChild("wallsection").ApplyMaterialToChild("Cube", materialA, "BaseDefault", materialB);
                 Wall.GetChild("wallsection").ApplyMaterialToChild("Cube.001", materialA, materialB);
-                //TODO: if still lags with big room save the mesh renderer
                 //TODO: is OnRegister material still needed?
 
                 LastData = data;
@@ -157,19 +156,17 @@ namespace KitchenSledgehammer
         {
             var hatch = Prefab.GetChild("wallsection");
 
-            //Helper.SetupThinCounter(Prefab);
-            //Helper.SetupThinCounterLimitedItem(Prefab, GetPrefab("HatchHammered"), false);
-
             hatch.ApplyMaterialToChild("Cube", "Wall Main", "BaseDefault", "Wall Main");
             hatch.ApplyMaterialToChild("Cube.001", "Wall Main", "Wall Main");
             hatch.ApplyMaterialToChild("Cube.002", "Wood - Default");
 
             var wall = Prefab.GetChild("WallHammerable");
-            wall.GetChild("wallsection").ApplyMaterialToChild("Cube", "Wall Main", "BaseDefault", "Wall Main");//TODO: these are wrong(?)
+            wall.GetChild("wallsection").ApplyMaterialToChild("Cube", "Wall Main", "BaseDefault", "Wall Main");
             wall.GetChild("wallsection").ApplyMaterialToChild("Cube.001", "Wall Main", "Wall Main");
             wall.GetChild("wallsection").ApplyMaterialToChild("Cube.002", "Wood - Default");
 
             wall.gameObject.transform.position += Vector3.down * 0.01f;//to prevent z fighting with outter walls eg in city
+
 
             WallReplacedView hammeredView = Prefab.AddComponent<WallReplacedView>();
             hammeredView.Wall = wall;
