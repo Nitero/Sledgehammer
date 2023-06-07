@@ -56,10 +56,9 @@ namespace KitchenSledgehammer
 
             duration.Manual = true;
             duration.IsLocked = false;
-            duration.Remaining -= 0.01f * 1f;
+            duration.Remaining -= 1f * Time.DeltaTime;
             duration.CurrentChange = 1f;
             EntityManager.SetComponentData(data.Target, duration);
-
 
             if (duration.Remaining <= 0f && duration.Active)
             {
