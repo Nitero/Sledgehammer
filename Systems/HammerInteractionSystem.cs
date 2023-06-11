@@ -11,8 +11,10 @@ namespace KitchenSledgehammer
         private CTakesDuration duration;
         private CWallReplaced wallReplaced;
         private CSledgehammer sledgeHammer;
+        private CItem sledgeHammerItem;
         private CToolUser toolUser;
         private EntityQuery sledgehammerQuery;
+        private EntityQuery sledgehammerProviderQuery;
         protected override bool RequireHold => true;
         protected override bool RequirePress => false;
 
@@ -20,6 +22,7 @@ namespace KitchenSledgehammer
         {
             base.Initialise();
             sledgehammerQuery = GetEntityQuery(new QueryHelper().All(typeof(CSledgehammer)));
+            sledgehammerProviderQuery = GetEntityQuery(new QueryHelper().All(typeof(CItemProvider)));
         }
 
         protected override bool IsPossible(ref InteractionData data)
@@ -50,6 +53,8 @@ namespace KitchenSledgehammer
                 return;
             if (!Require(toolUser.CurrentTool, out sledgeHammer))
                 return;
+            if (!Require(toolUser.CurrentTool, out sledgeHammerItem))
+                return;
 
             wallReplaced.HammeringWasAttemptedToday = true;
             EntityManager.SetComponentData(data.Target, wallReplaced);
@@ -73,7 +78,23 @@ namespace KitchenSledgehammer
                 duration.Active = false;
                 EntityManager.SetComponentData(data.Target, wallReplaced);
 
-                EntityManager.DestroyEntity(toolUser.CurrentTool);
+                if (WallReplaced.HammerConsequence > 1)//destroy provider
+                {
+                    using NativeArray<Entity> providerEntities = sledgehammerProviderQuery.ToEntityArray(Allocator.Temp);
+                    using NativeArray<CItemProvider> providers = sledgehammerProviderQuery.ToComponentDataArray<CItemProvider>(Allocator.Temp);
+                    for (int i = 0; i < providers.Length; i++)
+                    {
+                        Entity entity = providerEntities[i];
+                        CItemProvider provider = providers[i];
+                        if (provider.ProvidedItem == sledgeHammerItem)
+                            EntityManager.DestroyEntity(entity);
+                    }
+                }
+                if (WallReplaced.HammerConsequence > 0)//destroy hammer
+                {
+                    EntityManager.DestroyEntity(toolUser.CurrentTool);
+                    EntityManager.SetComponentData(data.Interactor, default(CToolUser));
+                }
             }
         }
     }

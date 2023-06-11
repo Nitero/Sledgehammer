@@ -2,6 +2,7 @@
 using KitchenData;
 using KitchenLib;
 using KitchenLib.Event;
+using KitchenLib.Preferences;
 using KitchenLib.Utils;
 using KitchenMods;
 using System.Collections.Generic;
@@ -31,6 +32,21 @@ namespace KitchenSledgehammer
 
         private static Dictionary<int, string> materialIdsToNames = new Dictionary<int, string>();
         public static Dictionary<int, string> MaterialIdsToNames => materialIdsToNames;
+
+
+        #region Preferences
+        public const string SLEDGEHAMMER_RARITY = "sledgehammerRarity";
+        public const string SLEDGEHAMMER_PRICE = "sledgehammerPrice";
+        public const string SLEDGEHAMMER_DURATION = "sledgehammerDuration";
+        public const string SLEDGEHAMMER_CONSEQUENCE = "sledgehammerConsequence";
+        #endregion
+
+        internal static PreferenceManager PrefManager;
+        internal static PreferenceInt SledgehammerRarity = new PreferenceInt(SLEDGEHAMMER_RARITY, 2);
+        internal static PreferenceInt SledgehammerPrice = new PreferenceInt(SLEDGEHAMMER_PRICE, 1250);
+        internal static PreferenceInt SledgehammerDuration = new PreferenceInt(SLEDGEHAMMER_DURATION, 15);
+        internal static PreferenceInt SledgehammerConsequence = new PreferenceInt(SLEDGEHAMMER_CONSEQUENCE, 1);
+
 
         // Boolean constant whose value depends on whether you built with DEBUG or RELEASE mode, useful for testing
 #if DEBUG
@@ -83,16 +99,57 @@ namespace KitchenSledgehammer
             //};
 
 
+            PrefManager = new PreferenceManager(MOD_GUID);
+
+            PrefManager.RegisterPreference(SledgehammerRarity);
+            PrefManager.RegisterPreference(SledgehammerPrice);
+            PrefManager.RegisterPreference(SledgehammerDuration);
+            PrefManager.RegisterPreference(SledgehammerConsequence);
+
+            PrefManager.Load();
+
+            ModsPreferencesMenu<PauseMenuAction>.RegisterMenu("Sledgehammer", typeof(SledgehammerMenu<PauseMenuAction>), typeof(PauseMenuAction));
+
+            Events.PreferenceMenu_PauseMenu_CreateSubmenusEvent += (s, args) => {
+                args.Menus.Add(typeof(SledgehammerMenu<PauseMenuAction>), new SledgehammerMenu<PauseMenuAction>(args.Container, args.Module_list));
+            };
+
             // Register custom GDOs
             AddGameData();
-
-            // Load process icons
-            AddProcessIcons();
 
             // Perform actions when game data is built
             Events.BuildGameDataEvent += delegate (object s, BuildGameDataEventArgs args)
             {
+                int rarity = Mod.PrefManager.GetPreference<PreferenceInt>(Mod.SLEDGEHAMMER_RARITY).Get();
+                Refs.SledgehammerProvider.RarityTier = (RarityTier)rarity;
+
+                int price = Mod.PrefManager.GetPreference<PreferenceInt>(Mod.SLEDGEHAMMER_PRICE).Get();
+                if (price == 0)
+                    Refs.SledgehammerProvider.PriceTier = PriceTier.Free;
+                if (price == 5)
+                    Refs.SledgehammerProvider.PriceTier = PriceTier.VeryCheap;
+                if (price == 20)
+                    Refs.SledgehammerProvider.PriceTier = PriceTier.Cheap;
+                if (price == 40)
+                    Refs.SledgehammerProvider.PriceTier = PriceTier.MediumCheap;
+                if (price == 60)
+                    Refs.SledgehammerProvider.PriceTier = PriceTier.Medium;
+                if (price == 100)
+                    Refs.SledgehammerProvider.PriceTier = PriceTier.Expensive;
+                if (price == 250)
+                    Refs.SledgehammerProvider.PriceTier = PriceTier.VeryExpensive;
+                if (price == 1250)
+                    Refs.SledgehammerProvider.PriceTier = PriceTier.ExtremelyExpensive;
+
+                int duration = Mod.PrefManager.GetPreference<PreferenceInt>(Mod.SLEDGEHAMMER_DURATION).Get();
+                WallReplaced.HammerDuration = duration;
+
+                int consequence = Mod.PrefManager.GetPreference<PreferenceInt>(Mod.SLEDGEHAMMER_CONSEQUENCE).Get();
+                WallReplaced.HammerConsequence = consequence;
             };
+
+            // Load process icons
+            AddProcessIcons();
 
             Events.BuildGameDataPostViewInitEvent += (s, args) =>
             {

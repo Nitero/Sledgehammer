@@ -24,6 +24,9 @@ namespace KitchenSledgehammer
         public override bool ForceHighInteractionPriority => false;
         public override OccupancyLayer Layer => OccupancyLayer.Wall;
 
+        public static float HammerDuration = 15f;
+        public static int HammerConsequence = 1;
+
         public override List<(Locale, ApplianceInfo)> InfoList => new()
         {
             (Locale.English, LocalisationUtils.CreateApplianceInfo("Hammered Hatch", "There once was a wall here", new()
@@ -43,7 +46,7 @@ namespace KitchenSledgehammer
             //new CIsInteractive(){ IsLowPriority = true },
             
             KitchenPropertiesUtils.GetCDisplayDuration(false, Refs.SledgehammerProcess.ID, false),
-            KitchenPropertiesUtils.GetCTakesDuration(15f, 15f, false, false, false, DurationToolType.None, InteractionMode.Appliances, false, true, false, false, 0),
+            KitchenPropertiesUtils.GetCTakesDuration(HammerDuration, HammerDuration, false, false, false, DurationToolType.None, InteractionMode.Appliances, false, true, false, false, 0),
         };
 
         public class WallReplacedViewSystem : ViewSystemBase

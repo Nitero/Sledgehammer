@@ -1,5 +1,4 @@
-﻿using HarmonyLib;
-using Kitchen;
+﻿using Kitchen;
 using Kitchen.Layouts;
 using KitchenLib.Utils;
 using KitchenMods;
@@ -68,6 +67,8 @@ namespace KitchenSledgehammer
                 if (EntityManager.RequireComponent(replacedWall, out CTakesDuration cTakesDuration))
                 {
                     cTakesDuration.Manual = false;
+                    cTakesDuration.Total = WallReplaced.HammerDuration;
+                    cTakesDuration.Remaining = WallReplaced.HammerDuration;
                     EntityManager.SetComponentData(replacedWall, cTakesDuration);
                 }
             }
