@@ -1,4 +1,6 @@
-﻿using Kitchen;
+﻿using System.Linq;
+using HarmonyLib;
+using Kitchen;
 using Kitchen.Layouts;
 using KitchenLib.Utils;
 using KitchenMods;
@@ -8,6 +10,59 @@ using UnityEngine;
 
 namespace KitchenSledgehammer
 {
+    [HarmonyPatch(typeof(LayoutBuilder))]
+    public class LayoutBuilder_Patch
+    {
+        public const string KITCHEN_FLOORPLAN_NAME = "Kitchen Floorplan";
+        public const string REPLACE_WALL_NAME = "ReplaceWall";
+
+        [HarmonyPatch("BuildWallBetween")]
+        [HarmonyPrefix]
+        public static void BuildWallBetween_PrefixPatch(LayoutBuilder __instance, Vector2 tile2,
+                                                        ref LayoutPrefabSet ___Prefabs,
+                                                        ref LayoutBuilderPatchState __state)
+        {
+            if (!__instance.Parent.gameObject.name.StartsWith(KITCHEN_FLOORPLAN_NAME))
+                return;
+
+            // Debug.Log($"Running for wall {tile2} (type {__instance.Blueprint[tile2].Type})");
+            if (!LayoutHelpers.IsInside(__instance.Blueprint[tile2].Type))
+            {
+                return;
+            }
+
+            // Debug.Log("Wall is inside, replacing prefab");
+
+            __state.ShortWallPrefab = ___Prefabs.ShortWallPrefab;
+
+            ___Prefabs.ShortWallPrefab = new(REPLACE_WALL_NAME);
+        }
+
+        [HarmonyPatch("BuildWallBetween")]
+        [HarmonyPostfix]
+        public static void BuildWallBetween_PostfixPatch(LayoutBuilder __instance, Vector2 tile2,
+                                                         ref LayoutPrefabSet ___Prefabs,
+                                                         LayoutBuilderPatchState __state)
+        {
+            if (!__instance.Parent.gameObject.name.StartsWith(KITCHEN_FLOORPLAN_NAME))
+                return;
+
+            if (!LayoutHelpers.IsInside(__instance.Blueprint[tile2].Type))
+            {
+                return;
+            }
+
+            // Debug.Log("Undoing prefab replace");
+
+            ___Prefabs.ShortWallPrefab = __state.ShortWallPrefab;
+        }
+
+        public struct LayoutBuilderPatchState
+        {
+            public GameObject ShortWallPrefab;
+        }
+    }
+
     public class ResetWallsInPractise : StartOfDaySystem, IModSystem
     {
         protected override void OnUpdate()
@@ -55,9 +110,9 @@ namespace KitchenSledgehammer
             //if (GameInfo.CurrentScene == SceneType.Kitchen)//TODO: then doesnt work on franchise, maybe other stuff too?
             //    return;
 
-            using NativeArray<Entity> replacedWalls = replacedWallQuery.ToEntityArray(Allocator.TempJob);
-            bool alreadyReplacedWalls = replacedWalls.Length > 0;
-            foreach (Entity replacedWall in replacedWalls)
+            using NativeArray<Entity> existingReplacedWalls = replacedWallQuery.ToEntityArray(Allocator.TempJob);
+            bool alreadyReplacedWalls = existingReplacedWalls.Length > 0;
+            foreach (Entity replacedWall in existingReplacedWalls)
             {
                 if (EntityManager.RequireComponent(replacedWall, out CWallReplaced cWallHasBeenReplaced))
                 {
@@ -73,58 +128,69 @@ namespace KitchenSledgehammer
                 }
             }
 
-            Transform floorplan = GameObject.Find("Kitchen Floorplan(Clone)").transform;
-            foreach (Transform child in floorplan.transform)
+            if (alreadyReplacedWalls)
             {
-                if (child.name != "Short Wall Section(Clone)" || !child.gameObject.activeSelf)
+                // Mod.LogInfo("Found existing walls, skipping replacement");
+                return;
+            }
+
+            LayoutView kitchenLayout = Object.FindObjectsOfType<LayoutView>()
+                .FirstOrDefault(l => l.name.StartsWith(LayoutBuilder_Patch.KITCHEN_FLOORPLAN_NAME));
+
+            if (!kitchenLayout)
+            {
+                // Mod.LogInfo("Couldn't find kitchen layout while adding wall entities");
+                return;
+            }
+
+            // Mod.LogInfo("Replacing wall entities...");
+
+            foreach (Transform child in kitchenLayout.transform)
+            {
+                if (!child.gameObject.name.StartsWith(LayoutBuilder_Patch.REPLACE_WALL_NAME))
                     continue;
 
                 //TODO: make this actually be what side the player made the hatch from
                 Vector3 from = new Vector3(Mathf.Floor(child.position.x), 0, Mathf.Floor(child.position.z));
                 Vector3 to = new Vector3(Mathf.Ceil(child.position.x), 0, Mathf.Ceil(child.position.z));
 
+                // Failsafe, might not be needed
                 if (!LayoutHelpers.IsInside(GetTile(from).Type))
                     continue;
                 if (!LayoutHelpers.IsInside(GetTile(to).Type))
                     continue;
 
-                child.gameObject.SetActive(false);
-
-                if (alreadyReplacedWalls)
-                    continue;
-                
-                
                 int wallMaterial = MaterialUtils.GetExistingMaterial("Wall Main").GetInstanceID(); //TODO: get the actual materials of walls when mod was added mid run
                 bool isHorizontal = Mathf.Approximately(from.z, to.z);
 
                 Reachability reachabilitySideA = default(Reachability);
                 Reachability reachabilitySideB = default(Reachability);
-                if(isHorizontal)
+                if (isHorizontal)
                 {
                     int direction = (int)Mathf.Sign(to.x - from.x);
                     reachabilitySideA[direction, 1] = true;
                     reachabilitySideA[direction, 0] = true;
-                    reachabilitySideA[direction,-1] = true;
+                    reachabilitySideA[direction, -1] = true;
 
                     reachabilitySideB[direction * -1, 1] = true;
                     reachabilitySideB[direction * -1, 0] = true;
-                    reachabilitySideB[direction * -1,-1] = true;
+                    reachabilitySideB[direction * -1, -1] = true;
                 }
                 else
                 {
                     int direction = (int)Mathf.Sign(to.z - from.z);
-                    reachabilitySideA[ 1, direction] = true;
-                    reachabilitySideA[ 0, direction] = true;
+                    reachabilitySideA[1, direction] = true;
+                    reachabilitySideA[0, direction] = true;
                     reachabilitySideA[-1, direction] = true;
 
-                    reachabilitySideB[ 1, direction * -1] = true;
-                    reachabilitySideB[ 0, direction * -1] = true;
+                    reachabilitySideB[1, direction * -1] = true;
+                    reachabilitySideB[0, direction * -1] = true;
                     reachabilitySideB[-1, direction * -1] = true;
                 }
                 //TODO: should set the rachability on the layout tiles directly? how? check LayoutExtensions
 
                 Entity entity = EntityManager.CreateEntity();
-                EntityManager.AddComponentData(entity, new CCreateAppliance{ ID = Refs.WallReplaced.ID });
+                EntityManager.AddComponentData(entity, new CCreateAppliance { ID = Refs.WallReplaced.ID });
                 EntityManager.AddComponentData(entity, new CPosition(child.position, child.rotation));
                 EntityManager.AddComponentData(entity, new CFixedRotation());
                 EntityManager.AddComponentData(entity, new CWallReplaced(child.position, from, to, GetRoom(from), GetRoom(to), reachabilitySideA, reachabilitySideB, wallMaterial, wallMaterial, false));
