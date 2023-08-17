@@ -18,42 +18,35 @@ namespace KitchenSledgehammer
 
         [HarmonyPatch("BuildWallBetween")]
         [HarmonyPrefix]
-        public static void BuildWallBetween_PrefixPatch(LayoutBuilder __instance, Vector2 tile2,
-                                                        ref LayoutPrefabSet ___Prefabs,
-                                                        ref LayoutBuilderPatchState __state)
+        public static void BuildWallBetween_PrefixPatch(LayoutBuilder __instance, Vector2 tile2, ref LayoutPrefabSet ___Prefabs, ref LayoutBuilderPatchState __state)
         {
+            // Only patch layout building for the Kitchen floorplan (not Franchise floorplan)
             if (!__instance.Parent.gameObject.name.StartsWith(KITCHEN_FLOORPLAN_NAME))
                 return;
 
-            // Debug.Log($"Running for wall {tile2} (type {__instance.Blueprint[tile2].Type})");
+            // Remove only internal walls
             if (!LayoutHelpers.IsInside(__instance.Blueprint[tile2].Type))
-            {
                 return;
-            }
 
-            // Debug.Log("Wall is inside, replacing prefab");
-
+            // Quick-swap the wall prefab with an empty GameObject (with a particular name)
             __state.ShortWallPrefab = ___Prefabs.ShortWallPrefab;
-
-            ___Prefabs.ShortWallPrefab = new(REPLACE_WALL_NAME);
+            ___Prefabs.ShortWallPrefab = new GameObject(REPLACE_WALL_NAME);
         }
 
         [HarmonyPatch("BuildWallBetween")]
         [HarmonyPostfix]
-        public static void BuildWallBetween_PostfixPatch(LayoutBuilder __instance, Vector2 tile2,
-                                                         ref LayoutPrefabSet ___Prefabs,
-                                                         LayoutBuilderPatchState __state)
+        public static void BuildWallBetween_PostfixPatch(LayoutBuilder __instance, Vector2 tile2, ref LayoutPrefabSet ___Prefabs, LayoutBuilderPatchState __state)
         {
+            // Only patch layout building for the Kitchen floorplan (not Franchise floorplan)
             if (!__instance.Parent.gameObject.name.StartsWith(KITCHEN_FLOORPLAN_NAME))
                 return;
 
+            // Remove only internal walls
             if (!LayoutHelpers.IsInside(__instance.Blueprint[tile2].Type))
-            {
                 return;
-            }
 
-            // Debug.Log("Undoing prefab replace");
-
+            // Remove the replacement GO and swap the original prefab back in
+            Object.Destroy(___Prefabs.ShortWallPrefab);
             ___Prefabs.ShortWallPrefab = __state.ShortWallPrefab;
         }
 
@@ -111,7 +104,28 @@ namespace KitchenSledgehammer
             //    return;
 
             using NativeArray<Entity> existingReplacedWalls = replacedWallQuery.ToEntityArray(Allocator.TempJob);
-            bool alreadyReplacedWalls = existingReplacedWalls.Length > 0;
+
+            if (existingReplacedWalls.Length > 0)
+            {
+                SetupExistingWallEntities(existingReplacedWalls);
+            }
+            else
+            {
+                LayoutView kitchenLayout = Object.FindObjectsOfType<LayoutView>().FirstOrDefault(l => l.name.StartsWith(LayoutBuilder_Patch.KITCHEN_FLOORPLAN_NAME));
+
+                if (!kitchenLayout)
+                {
+                    Mod.LogInfo("Couldn't find kitchen layout while adding wall entities");
+                    return;
+                }
+
+                AddWallEntities(kitchenLayout.transform);
+            }
+        }
+        
+        private void SetupExistingWallEntities(NativeArray<Entity> existingReplacedWalls)
+        {
+
             foreach (Entity replacedWall in existingReplacedWalls)
             {
                 if (EntityManager.RequireComponent(replacedWall, out CWallReplaced cWallHasBeenReplaced))
@@ -127,25 +141,12 @@ namespace KitchenSledgehammer
                     EntityManager.SetComponentData(replacedWall, cTakesDuration);
                 }
             }
+        }
 
-            if (alreadyReplacedWalls)
-            {
-                // Mod.LogInfo("Found existing walls, skipping replacement");
-                return;
-            }
-
-            LayoutView kitchenLayout = Object.FindObjectsOfType<LayoutView>()
-                .FirstOrDefault(l => l.name.StartsWith(LayoutBuilder_Patch.KITCHEN_FLOORPLAN_NAME));
-
-            if (!kitchenLayout)
-            {
-                // Mod.LogInfo("Couldn't find kitchen layout while adding wall entities");
-                return;
-            }
-
-            // Mod.LogInfo("Replacing wall entities...");
-
-            foreach (Transform child in kitchenLayout.transform)
+        private void AddWallEntities(Transform transform)
+        {
+            Mod.LogInfo("Replacing wall entities...");
+            foreach (Transform child in transform)
             {
                 if (!child.gameObject.name.StartsWith(LayoutBuilder_Patch.REPLACE_WALL_NAME))
                     continue;
@@ -189,12 +190,18 @@ namespace KitchenSledgehammer
                 }
                 //TODO: should set the rachability on the layout tiles directly? how? check LayoutExtensions
 
-                Entity entity = EntityManager.CreateEntity();
-                EntityManager.AddComponentData(entity, new CCreateAppliance { ID = Refs.WallReplaced.ID });
-                EntityManager.AddComponentData(entity, new CPosition(child.position, child.rotation));
-                EntityManager.AddComponentData(entity, new CFixedRotation());
-                EntityManager.AddComponentData(entity, new CWallReplaced(child.position, from, to, GetRoom(from), GetRoom(to), reachabilitySideA, reachabilitySideB, wallMaterial, wallMaterial, false));
+                AddWallEntity(child, from, to, reachabilitySideA, reachabilitySideB, wallMaterial);
             }
+        }
+        
+        private void AddWallEntity(Transform child, Vector3 from, Vector3 to, Reachability reachabilitySideA, Reachability reachabilitySideB, int wallMaterial)
+        {
+
+            Entity entity = EntityManager.CreateEntity();
+            EntityManager.AddComponentData(entity, new CCreateAppliance { ID = Refs.WallReplaced.ID });
+            EntityManager.AddComponentData(entity, new CPosition(child.position, child.rotation));
+            EntityManager.AddComponentData(entity, new CFixedRotation());
+            EntityManager.AddComponentData(entity, new CWallReplaced(child.position, from, to, GetRoom(from), GetRoom(to), reachabilitySideA, reachabilitySideB, wallMaterial, wallMaterial, false));
         }
     }
 }
