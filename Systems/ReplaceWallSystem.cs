@@ -47,6 +47,8 @@ namespace KitchenSledgehammer
 
         protected override void OnUpdate()
         {
+            return;
+
             if (_didSetup)
                 return;
             _didSetup = true;

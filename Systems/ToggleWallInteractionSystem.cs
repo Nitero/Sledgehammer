@@ -74,6 +74,8 @@ namespace KitchenSledgehammer
 
         protected override void OnUpdate()
         {
+            return;
+
             using NativeArray<Entity> wallEntities = replacedWallQuery.ToEntityArray(Allocator.Temp);
 
             for (int i = 0; i < wallEntities.Length; i++)

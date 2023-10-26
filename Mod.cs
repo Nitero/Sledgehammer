@@ -151,18 +151,18 @@ namespace KitchenSledgehammer
             // Load process icons
             AddProcessIcons();
 
-            Events.BuildGameDataPostViewInitEvent += (s, args) =>
-            {
-                foreach (Decor decor in args.gamedata.Get<Decor>().Where(x => x.IsAvailable))
-                {
-                    if (decor.Type != LayoutMaterialType.Wallpaper)
-                        continue;
-                    string decorName = $"{decor.ID}";
-                    wallpaperIdsToMaterialIds.Add(decor.ID, decor.Material.GetInstanceID());
-                    materialIdsToNames.Add(decor.Material.GetInstanceID(), decor.Material.name);
-                }
-                materialIdsToNames.Add(MaterialUtils.GetExistingMaterial("Wall Main").GetInstanceID(), "Wall Main");
-            };
+            //Events.BuildGameDataPostViewInitEvent += (s, args) =>
+            //{
+            //    foreach (Decor decor in args.gamedata.Get<Decor>().Where(x => x.IsAvailable))
+            //    {
+            //        if (decor.Type != LayoutMaterialType.Wallpaper)
+            //            continue;
+            //        string decorName = $"{decor.ID}";
+            //        wallpaperIdsToMaterialIds.Add(decor.ID, decor.Material.GetInstanceID());
+            //        materialIdsToNames.Add(decor.Material.GetInstanceID(), decor.Material.name);
+            //    }
+            //    materialIdsToNames.Add(MaterialUtils.GetExistingMaterial("Wall Main").GetInstanceID(), "Wall Main");
+            //};
         }
 
         #region Logging
